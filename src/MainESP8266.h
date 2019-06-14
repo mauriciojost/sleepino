@@ -405,6 +405,31 @@ BotMode setupArchitecture() {
   lcd->display();
   delay(DELAY_MS_SPI);
 
+  while (true) {
+    log(CLASS_MAIN, Debug, "A");
+    lcd->clearDisplay();
+    lcd->setTextWrap(false);
+    lcd->setTextSize(1);
+    lcd->setTextColor(BLACK);
+    lcd->setCursor(0, 0);
+    lcd->print("AAA");
+    lcd->display();
+
+    delay(1000);
+
+    log(CLASS_MAIN, Debug, "BBB");
+    lcd->clearDisplay();
+    lcd->setTextWrap(false);
+    lcd->setTextSize(1);
+    lcd->setTextColor(BLACK);
+    lcd->setCursor(0, 0);
+    lcd->print("BBB");
+    lcd->display();
+
+    delay(1000);
+
+  }
+
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup wdt");
