@@ -275,6 +275,7 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
   lcd->display();
   log(CLASS_MAIN, Debug, "Msg: (%d,%d)'%s'", x, y, str);
   delay(DELAY_MS_SPI);
+  delay(3000);
 }
 
 void clearDevice() {
@@ -316,19 +317,7 @@ bool writeFile(const char *fname, const char *content) {
   return success;
 }
 
-void infoArchitecture() {
-
-  m->getNotifier()->message(0,
-                            1,
-                            "ID:%s\nV:%s\nCrashes:%d\nIP: %s\nMemory:%lu\nUptime:%luh\nVcc: %0.2f",
-                            apiDeviceLogin(),
-                            STRINGIFY(PROJ_VERSION),
-                            SaveCrash.count(),
-                            WiFi.localIP().toString().c_str(),
-                            ESP.getFreeHeap(),
-                            (millis() / 1000) / 3600,
-                            VCC_FLOAT);
-}
+void infoArchitecture() {}
 
 void testArchitecture() {}
 
@@ -341,12 +330,10 @@ void updateFirmware(const char *descriptor) {
   bool connected = initWifi(s->getSsid(), s->getPass(), false, 10);
   if (!connected) {
     log(CLASS_MAIN, Error, "Cannot connect to wifi");
-    m->getNotifier()->message(0, 1, "Cannot connect to wifi: %s", s->getSsid());
     return; // fail fast
   }
 
   log(CLASS_MAIN, Info, "Updating firmware from '%s'...", url.getBuffer());
-  m->getNotifier()->message(0, 1, "Updating: %s", url.getBuffer());
 
   t_httpUpdate_return ret = updater.update(url.getBuffer());
   switch (ret) {
@@ -451,40 +438,6 @@ BotMode setupArchitecture() {
 
 void runModeArchitecture() {
   handleInterrupt();
-
-  while (true) {
-    log(CLASS_MAIN, Debug, "A");
-    lcd->clearDisplay();
-    lcd->setTextWrap(false);
-    lcd->setTextSize(1);
-    lcd->setTextColor(BLACK);
-    lcd->setCursor(0, 0);
-    lcd->print("AAA");
-    lcd->display();
-
-    delay(1000);
-
-    log(CLASS_MAIN, Debug, "BBB");
-    lcd->clearDisplay();
-    lcd->setTextWrap(false);
-    lcd->setTextSize(1);
-    lcd->setTextColor(BLACK);
-    lcd->setCursor(0, 0);
-    lcd->print("BBB");
-    lcd->display();
-
-    delay(1000);
-
-    messageFunc(0, 0, BLACK, false, FullClear, 1, "CCC");
-
-    delay(1000);
-
-    messageFunc(0, 0, BLACK, false, FullClear, 1, "DDD");
-
-    delay(1000);
-
-  }
-
   if (m->getModuleSettings()->getDebug()) {
     debugHandle();
   }
@@ -555,14 +508,10 @@ CmdExecStatus commandArchitecture(const char *c) {
 void configureModeArchitecture() {
   handleInterrupt();
   debugHandle();
-  if (m->getBot()->getClock()->currentTime() % 60 == 0) { // every minute
-    m->getNotifier()->message(0, 1, "telnet %s", WiFi.localIP().toString().c_str());
-  }
 }
 
 void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
-  m->getNotifier()->message(0, 1, "Abort: %s", msg);
   bool interrupt = sleepInterruptable(now(), ABORT_DELAY_SECS);
   if (interrupt) {
     log(CLASS_MAIN, Debug, "Abort sleep interrupted");

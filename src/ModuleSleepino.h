@@ -5,7 +5,6 @@
 #include <log4ino/Log.h>
 #include <main4ino/Actor.h>
 
-#include <actors/Notifier.h>
 #include <actors/SleepinoSettings.h>
 #include <mod4ino/Module.h>
 
@@ -32,7 +31,6 @@ private:
   Module *module;
 
   // Actors
-  Notifier *notifier;
   SleepinoSettings *bsettings;
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
@@ -43,9 +41,8 @@ public:
     module = new Module();
 
     bsettings = new SleepinoSettings("sleepino");
-    notifier = new Notifier("notifier");
 
-    module->getActors()->add(2, (Actor *)bsettings, (Actor *)notifier);
+    module->getActors()->add(1, (Actor *)bsettings);
 
     message = NULL;
   }
@@ -89,7 +86,6 @@ public:
 
     message = messageFunc;
 
-    notifier->setup(messageFunc);
   }
 
   bool startupProperties() {
@@ -142,42 +138,7 @@ public:
    * Thought to be used via single button devices, so that
    * a button pressed can execute one of many available commands.
    */
-  void sequentialCommand(int index, bool dryRun) {
-    switch (index) {
-      case 0: {
-        getNotifier()->message(0, 2, "All act?");
-        if (!dryRun) {
-          module->actall();
-          getNotifier()->message(0, 1, "All act one-off");
-        }
-      } break;
-      case 1: {
-        getNotifier()->message(0, 2, "Config mode?");
-        if (!dryRun) {
-          module->confCmd();
-          getNotifier()->message(0, 1, "In config mode");
-        }
-      } break;
-      case 2: {
-        getNotifier()->message(0, 2, "Run mode?");
-        if (!dryRun) {
-          module->runCmd();
-          getNotifier()->message(0, 1, "In run mode");
-        }
-      } break;
-      case 3: {
-        getNotifier()->message(0, 2, "Show info?");
-        if (!dryRun) {
-          module->infoCmd();
-        }
-      } break;
-      default: { getNotifier()->message(0, 2, "Abort?"); } break;
-    }
-  }
-
-  Notifier *getNotifier() {
-    return notifier;
-  }
+  void sequentialCommand(int index, bool dryRun) { }
 
   Settings *getModuleSettings() {
     return module->getSettings();
@@ -197,7 +158,9 @@ public:
 
   void loop() {
     Buffer timeAux(19);
-    notifier->setMessage(Timing::humanize(getBot()->getClock()->currentTime(), &timeAux));
+    Timing::humanize(getBot()->getClock()->currentTime(), &timeAux);
+    timeAux.replace(' ', '\n');
+    message(0, 0, 1, false, FullClear, 1, timeAux.getBuffer());
     module->loop();
   }
 };
