@@ -7,36 +7,36 @@
 #define STATUS_BUFFER_SIZE 64
 
 enum SleepinoSettingsProps {
-  SleepinoSettingsLcdLogsProp = 0,  // boolean, define if the device display logs in LCD
-  SleepinoSettingsStatusProp,       // string, defines the current general status of the device (vcc level, heap, etc)
-  SleepinoSettingsFsLogsProp,       // boolean, define if logs are to be dumped in the file system (only in debug mode)
-	SleepinoSettingsPropsDelimiter
+  SleepinoSettingsLcdLogsProp = 0, // boolean, define if the device display logs in LCD
+  SleepinoSettingsStatusProp,      // string, defines the current general status of the device (vcc level, heap, etc)
+  SleepinoSettingsFsLogsProp,      // boolean, define if logs are to be dumped in the file system (only in debug mode)
+  SleepinoSettingsPropsDelimiter
 };
 
 class SleepinoSettings : public Actor {
 
 private:
-	const char* name;
+  const char *name;
   bool lcdLogs;
   Buffer *status;
   bool fsLogs;
   Metadata *md;
 
 public:
-  SleepinoSettings(const char* n) {
-  	name = n;
+  SleepinoSettings(const char *n) {
+    name = n;
     lcdLogs = false;
     status = new Buffer(STATUS_BUFFER_SIZE);
     fsLogs = false;
     md = new Metadata(n);
   }
 
-  const char* getName() {
-  	return name;
+  const char *getName() {
+    return name;
   }
 
   int getNroProps() {
-  	return SleepinoSettingsPropsDelimiter;
+    return SleepinoSettingsPropsDelimiter;
   }
 
   void act() {}
@@ -77,8 +77,8 @@ public:
     return md;
   }
 
-  Buffer* getStatus() {
-  	return status;
+  Buffer *getStatus() {
+    return status;
   }
 
   bool fsLogsEnabled() {
@@ -88,7 +88,6 @@ public:
   bool getLcdLogs() {
     return lcdLogs;
   }
-
 };
 
 #endif // MODULE_SETTINGS_INC

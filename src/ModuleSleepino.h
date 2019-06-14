@@ -5,9 +5,9 @@
 #include <log4ino/Log.h>
 #include <main4ino/Actor.h>
 
-#include <mod4ino/Module.h>
 #include <actors/Notifier.h>
 #include <actors/SleepinoSettings.h>
+#include <mod4ino/Module.h>
 
 #define CLASS_MODULEB "MB"
 
@@ -48,7 +48,6 @@ public:
     module->getActors()->add(2, (Actor *)bsettings, (Actor *)notifier);
 
     message = NULL;
-
   }
 
   void setup(BotMode (*setupArchitectureFunc)(),
@@ -65,7 +64,7 @@ public:
              void (*runModeArchitectureFunc)(),
              CmdExecStatus (*commandArchitectureFunc)(const char *cmd),
              void (*infoFunc)(),
-             void (*updateFunc)(const char*),
+             void (*updateFunc)(const char *),
              void (*testFunc)(),
              const char *(*apiDeviceLoginFunc)(),
              const char *(*apiDevicePassFunc)()) {
@@ -93,7 +92,6 @@ public:
     notifier->setup(messageFunc);
   }
 
-
   bool startupProperties() {
     return module->startupProperties();
   }
@@ -103,7 +101,7 @@ public:
    */
   CmdExecStatus command(const char *cmd) {
 
-  	{
+    {
       Buffer b(cmd);
       logUser("\n> %s\n", b.getBuffer());
 
@@ -133,8 +131,8 @@ public:
         return module->command("?");
       }
       // deallocate buffer memory
-  	}
-  	// if none of the above went through
+    }
+    // if none of the above went through
     return module->command(cmd);
   }
 
@@ -173,9 +171,7 @@ public:
           module->infoCmd();
         }
       } break;
-      default: {
-        getNotifier()->message(0, 2, "Abort?");
-      } break;
+      default: { getNotifier()->message(0, 2, "Abort?"); } break;
     }
   }
 
@@ -200,7 +196,7 @@ public:
   }
 
   void loop() {
-  	module->loop();
+    module->loop();
   }
 };
 

@@ -75,7 +75,7 @@ extern "C" {
 #define HTTP_TIMEOUT_MS 8000
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
-  "\n  ESP8266 HELP"                                                                                                                        \
+  "\n  ESP8266 HELP"                                                                                                                       \
   "\n  init              : initialize essential settings (wifi connection, logins, etc.)"                                                  \
   "\n  rm ...            : remove file in FS "                                                                                             \
   "\n  ls                : list files present in FS "                                                                                      \
@@ -330,9 +330,9 @@ void infoArchitecture() {
                             VCC_FLOAT);
 }
 
-void testArchitecture() { }
+void testArchitecture() {}
 
-void updateFirmware(const char* descriptor) {
+void updateFirmware(const char *descriptor) {
   ESP8266HTTPUpdate updater;
   Buffer url(64);
   url.fill(FIRMWARE_UPDATE_URL, descriptor);
@@ -475,7 +475,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     const char *f = strtok(NULL, " ");
     SPIFFS.begin();
     bool succ = SPIFFS.remove(f);
-    logUser("### File '%s' %s removed", f, (succ?"":"NOT"));
+    logUser("### File '%s' %s removed", f, (succ ? "" : "NOT"));
     SPIFFS.end();
     return Executed;
   } else if (strcmp("reset", c) == 0) {
@@ -492,7 +492,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     return Executed;
   } else if (strcmp("lightsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
-    return (lightSleepInterruptable(now(), s)? ExecutedInterrupt: Executed);
+    return (lightSleepInterruptable(now(), s) ? ExecutedInterrupt : Executed);
   } else if (strcmp("clearstack", c) == 0) {
     SaveCrash.clear();
     return Executed;
@@ -556,7 +556,6 @@ void debugHandle() {
   ArduinoOTA.handle(); // Handle on the air firmware load
 }
 
-
 void bitmapToLcd(uint8_t bitmap[]) {
   for (char yi = 0; yi < 8; yi++) {
     for (char xi = 0; xi < 2; xi++) {
@@ -596,7 +595,7 @@ bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs) {
 }
 
 void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
-	time_t p = (periodSecs > MAX_DEEP_SLEEP_PERIOD_SECS? MAX_DEEP_SLEEP_PERIOD_SECS: periodSecs);
+  time_t p = (periodSecs > MAX_DEEP_SLEEP_PERIOD_SECS ? MAX_DEEP_SLEEP_PERIOD_SECS : periodSecs);
   log(CLASS_MAIN, Debug, "Deep Sleep(%ds)...", (int)p);
   time_t spentSecs = now() - cycleBegin;
   time_t leftSecs = p - spentSecs;
@@ -618,7 +617,7 @@ void handleInterrupt() {
     log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
     log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
     logUser("(%s => %s)", cmdBuffer.getBuffer(), CMD_EXEC_STATUS(execStatus));
-  } 
+  }
 }
 
 bool haveToInterrupt() {
@@ -631,9 +630,9 @@ bool haveToInterrupt() {
 }
 
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
-	bool first = false;
+  bool first = false;
   if (*var == NULL) {
-  	first = true;
+    first = true;
     *var = new Buffer(maxLength);
     bool succAlias = readFile(filename, *var); // preserve the alias
     if (succAlias) {                           // managed to retrieve the alias
