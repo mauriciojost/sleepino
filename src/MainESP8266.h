@@ -13,7 +13,6 @@
 #include <RemoteDebug.h>
 #include <SPI.h>
 #include <Wire.h>
-#include <utils/Io.h>
 
 #define DELAY_MS_SPI 3
 #define ABORT_DELAY_SECS 5
