@@ -607,6 +607,7 @@ void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
   time_t spentSecs = now() - cycleBegin;
   time_t leftSecs = p - spentSecs;
   if (leftSecs > 0) {
+    //lcd->command(PCD8544_FUNCTIONSET | PCD8544_POWERDOWN);
     ESP.deepSleep(leftSecs * 1000000L);
   }
 }
