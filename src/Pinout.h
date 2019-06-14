@@ -38,4 +38,12 @@
 #define PIN_D11 GPIO9_PIN  // SDD2 / SD2 // cannot be used at all, internal
 #define PIN_D12 GPIO10_PIN // SDD3 / SD3 // can be used as input only
 
+
+// LCD
+#define LCD_CLK_PIN GPIO2_PIN
+#define LCD_DIN_PIN GPIO0_PIN
+#define LCD_DC_PIN GPIO4_PIN
+#define LCD_CS_PIN GPIO5_PIN
+#define LCD_RST_PIN GPIO14_PIN
+
 #endif // PINOUT_INC

@@ -397,11 +397,10 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup pins & deepsleep (if failure think of activating deep sleep mode?)");
 
   log(CLASS_MAIN, Debug, "Setup LCD");
-  // Nokia 5110 LCD module connections (CLK,       DIN,       D/C,       CS,        RST)
-  lcd = new Adafruit_PCD8544(           GPIO2_PIN, GPIO0_PIN, GPIO4_PIN, GPIO5_PIN, GPIO14_PIN);
+  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   delay(DELAY_MS_SPI);
-  lcd->begin(50, 0x17);
-  lcd->display();
+  lcd->begin(50);
+  lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
   heartbeat();
