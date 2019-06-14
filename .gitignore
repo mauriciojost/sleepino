@@ -136,3 +136,6 @@
 /src/Time.cpp
 /src/Time.h
 /src/TimeLib.h
+/libs/Adafruit-PCD8544-Nokia-5110-LCD-library/
+/src/Adafruit_PCD8544.cpp
+/src/Adafruit_PCD8544.h
