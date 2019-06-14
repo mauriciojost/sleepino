@@ -196,6 +196,8 @@ public:
   }
 
   void loop() {
+    Buffer timeAux(19);
+    notifier->setMessage(Timing::humanize(getBot()->getClock()->currentTime(), &timeAux));
     module->loop();
   }
 };

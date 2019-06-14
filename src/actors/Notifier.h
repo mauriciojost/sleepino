@@ -27,13 +27,8 @@
 #include <main4ino/RichBuffer.h>
 #include <mod4ino/MsgClearMode.h>
 
-#define EMPTY_NOTIF_REPRESENTATION ""
-#define NOTIFS_SEPARATOR ':'
-#define MAX_NRO_NOTIFS 4 // must be aligned with enum below
-
 enum NotifierProps {
-  NotifierNotifsProp = 0,
-  NotifierPropsDelimiter // count of properties
+  NotifierPropsDelimiter = 0 // count of properties
 };
 
 class Notifier : public Actor {
@@ -41,27 +36,11 @@ class Notifier : public Actor {
 private:
   const char *name;
   Metadata *md;
-  Queue<MAX_NRO_NOTIFS, MAX_NOTIF_LENGTH> queue;
+  Buffer *b;
   void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
 
   bool isInitialized() {
     return messageFunc != NULL;
-  }
-
-  void notify(bool forceClean) {
-    const char *currentNotif = getNotification();
-    Buffer msg(LCD_WIDTH);
-    if (currentNotif != NULL) {
-      log(CLASS_NOTIFIER, Debug, "Notif(%d): %s", queue.size(), currentNotif);
-      msg.fill("(%d) %s", queue.size(), currentNotif);
-      messageFunc(0, NOTIF_LINE, WHITE, DO_NOT_WRAP, LineClear, NOTIF_SIZE, msg.center(' ', LCD_WIDTH));
-    } else {
-      if (forceClean) {
-        msg.fill("<>");
-        messageFunc(0, NOTIF_LINE, WHITE, DO_NOT_WRAP, LineClear, NOTIF_SIZE, msg.center(' ', LCD_WIDTH));
-      }
-      log(CLASS_NOTIFIER, Debug, "No notifs");
-    }
   }
 
 public:
@@ -69,7 +48,13 @@ public:
     name = n;
     messageFunc = NULL;
     md = new Metadata(n);
-    md->getTiming()->setFreq("never");
+    md->getTiming()->setFreq("~1m");
+    b = new Buffer(64);
+  }
+
+  void setMessage(const char* m) {
+  	b->load(m);
+    message(0, 1, b->getBuffer());
   }
 
   const char *getName() {
@@ -95,76 +80,25 @@ public:
     va_start(args, format);
     vsnprintf(buffer.getUnsafeBuffer(), MAX_MSG_LENGTH, format, args);
     buffer.getUnsafeBuffer()[MAX_MSG_LENGTH - 1] = 0;
-    messageFunc(0, line, WHITE, DO_WRAP, FullClear, size, buffer.getBuffer());
+    messageFunc(0, line, BLACK, DO_WRAP, FullClear, size, buffer.getBuffer());
     va_end(args);
 
-    notify(false); // apart from the message, also notify if notifications are available
   }
 
-  int notification(const char *msg) {
-    int i = queue.pushUnique(msg);
-    log(CLASS_NOTIFIER, Debug, "New notif: %s (%d notifs)", msg, i);
-    getMetadata()->changed();
-    notify(false); // update notification
-    return i;
+  void act() {
+  	if (getTiming()->matches()) {
+      message(0, 1, b->getBuffer());
+  	}
   }
-
-  const char *getNotification() {
-    return queue.get();
-  }
-
-  int notificationRead() {
-    int i = queue.pop();
-    log(CLASS_NOTIFIER, Debug, "Notif read: %d notifs left", i);
-    getMetadata()->changed();
-    notify(true); // update notification
-    return i;
-  }
-
-  void act() {}
 
   const char *getPropName(int propIndex) {
     switch (propIndex) {
-      case (NotifierNotifsProp):
-        return STATUS_PROP_PREFIX "ns";
       default:
         return "";
     }
   }
 
-  void bufferToQueue(RichBuffer *b) {
-    const char *p;
-    while ((p = b->split(NOTIFS_SEPARATOR)) != NULL) {
-      if (strcmp(p, EMPTY_NOTIF_REPRESENTATION) != 0) { // filter out empty notifs
-        queue.pushUnique(p);                            // add to the existent ones, does not remove
-      }
-    }
-  }
-
-  void queueToBuffer(RichBuffer *b) {
-    b->clear();
-    for (int i = 0; i < queue.capacity(); i++) {
-      b->append(queue.getAt(i, EMPTY_NOTIF_REPRESENTATION));
-      b->append(NOTIFS_SEPARATOR);
-    }
-  }
-
-  void getSetPropValue(int propIndex, GetSetMode m, const Value *targetValue, Value *actualValue) {
-    if (propIndex == NotifierNotifsProp) {
-      RichBuffer b = RichBuffer((MAX_NOTIF_LENGTH + 1) * MAX_NRO_NOTIFS);
-      if (m == SetCustomValue) {
-        b.load(targetValue);
-        bufferToQueue(&b);
-      }
-      if (actualValue != NULL) {
-        queueToBuffer(&b);
-        actualValue->load(&b);
-      }
-    }
-    if (m != GetValue) {
-      getMetadata()->changed();
-    }
-  }
+  void getSetPropValue(int propIndex, GetSetMode m, const Value *targetValue, Value *actualValue) {}
 
   int getNroProps() {
     return NotifierPropsDelimiter;
