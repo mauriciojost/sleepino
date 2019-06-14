@@ -75,6 +75,7 @@ extern "C" {
   "\n  ESP8266 HELP"                                                                                                                       \
   "\n  init              : initialize essential settings (wifi connection, logins, etc.)"                                                  \
   "\n  rm ...            : remove file in FS "                                                                                             \
+  "\n  lcdcont ...       : change lcd contrast"                                                                                            \
   "\n  ls                : list files present in FS "                                                                                      \
   "\n  reset             : reset the device"                                                                                               \
   "\n  freq ...          : set clock frequency in MHz (80 or 160 available only, 160 faster but more power consumption)"                   \
@@ -478,6 +479,12 @@ CmdExecStatus commandArchitecture(const char *c) {
     bool succ = SPIFFS.remove(f);
     logUser("### File '%s' %s removed", f, (succ ? "" : "NOT"));
     SPIFFS.end();
+    return Executed;
+  } else if (strcmp("lcdcont", c) == 0) {
+    const char *c = strtok(NULL, " ");
+    int i = atoi(c);
+    logUser("Set contrast to: %d", i);
+    lcd->setContrast(i);
     return Executed;
   } else if (strcmp("reset", c) == 0) {
     ESP.restart(); // it is normal that it fails if invoked the first time after firmware is written
