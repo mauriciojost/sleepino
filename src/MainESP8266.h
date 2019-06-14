@@ -1,6 +1,6 @@
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>      // include adafruit graphics library
+#include <Adafruit_PCD8544.h>  // include adafruit PCD8544 (Nokia 5110) library
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <ESP8266HTTPClient.h>
@@ -85,7 +85,7 @@ extern "C" {
 
 HTTPClient httpClient;
 RemoteDebug telnet;
-Adafruit_SSD1306 *lcd = NULL;
+Adafruit_PCD8544* lcd = NULL;
 Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
 Buffer *deepSleepMode = NULL;
@@ -396,9 +396,13 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup pins & deepsleep (if failure think of activating deep sleep mode?)");
 
   log(CLASS_MAIN, Debug, "Setup LCD");
-  lcd = new Adafruit_SSD1306(-1);
-  lcd->begin(SSD1306_SWITCHCAPVCC, 0x3C); // Initialize LCD
+  // Nokia 5110 LCD module connections (CLK,       DIN,       D/C,       CS,        RST)
+  lcd = new Adafruit_PCD8544(           GPIO2_PIN, GPIO0_PIN, GPIO4_PIN, GPIO5_PIN, GPIO14_PIN);
   delay(DELAY_MS_SPI);
+  lcd->begin(50, 0x17);
+  lcd->display();
+  delay(DELAY_MS_SPI);
+
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup wdt");
