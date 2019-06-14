@@ -128,3 +128,11 @@
 /coverage.xml
 /libs/mod4ino/
 /src/mod4ino
+/libs/Time/
+/libs/arduino-base64/
+/src/Base64.cpp
+/src/Base64.h
+/src/DateStrings.cpp
+/src/Time.cpp
+/src/Time.h
+/src/TimeLib.h
