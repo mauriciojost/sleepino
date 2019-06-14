@@ -87,11 +87,6 @@ extern "C" {
   "\n  clearstack        : clear stack trace "                                                                                             \
   "\n"
 
-#define BUTTON_IS_PRESSED ((bool)digitalRead(BUTTON0_PIN))
-
-volatile bool buttonEnabled = true;
-volatile unsigned char buttonInterrupts = 0;
-
 HTTPClient httpClient;
 RemoteDebug telnet;
 Adafruit_SSD1306 *lcd = NULL;
@@ -101,23 +96,16 @@ Buffer *deepSleepMode = NULL;
 int currentLogLine = 0;
 Buffer *logBuffer = NULL;
 
-#define LED_INT_TOGGLE ios('w', IoToggle);
-#define LED_INT_ON ios('w', IoOn);
-#define LED_ALIVE_TOGGLE ios('r', IoToggle);
-
 ADC_MODE(ADC_VCC);
 
 void bitmapToLcd(uint8_t bitmap[]);
 void reactCommandCustom();
-#include "MainESP8266_hwtest.h" // defines hwTest()
-void buttonPressed();
 void heartbeat();
 bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs);
 void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs);
 void debugHandle();
 bool haveToInterrupt();
 void handleInterrupt();
-void initializeServoConfigs();
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate);
 void dumpLogBuffer();
 bool inDeepSleepMode();
@@ -343,9 +331,7 @@ void infoArchitecture() {
                             VCC_FLOAT);
 }
 
-void testArchitecture() {
-  hwTest();
-}
+void testArchitecture() { }
 
 void updateFirmware(const char* descriptor) {
   ESP8266HTTPUpdate updater;
@@ -390,7 +376,6 @@ bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
     if (interrupt) {
       return true;
     }
-    m->zCmd();
     deepSleepNotInterruptable(cycleBegin, periodSecs);
     return false; // won't be called ever
   } else {
@@ -436,10 +421,6 @@ BotMode setupArchitecture() {
   randomSeed(analogRead(0) * 256 + analogRead(0));
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup interrupts");
-  attachInterrupt(digitalPinToInterrupt(BUTTON0_PIN), buttonPressed, RISING);
-  heartbeat();
-
   log(CLASS_MAIN, Debug, "Setup commands");
   telnet.setCallBackProjectCmds(reactCommandCustom);
   String helpCli("Type 'help' for help");
@@ -447,12 +428,7 @@ BotMode setupArchitecture() {
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup IO/lcd");
-  ios('*', IoOff);
-  lcdImg('l', NULL);
   heartbeat();
-
-  log(CLASS_MAIN, Debug, "Setup servos");
-  initializeServoConfigs();
 
   log(CLASS_MAIN, Debug, "Clean up crashes");
   if (SaveCrash.count() > 5) {
@@ -473,91 +449,13 @@ void runModeArchitecture() {
   }
 }
 
-void askStringQuestion(const char *question, Buffer *answer) {
-  m->getNotifier()->message(0, 1, "%s\n(answer serial and enter)", question);
-  Serial.readBytesUntil('\n', answer->getUnsafeBuffer(), COMMAND_MAX_LENGTH);
-  answer->replace('\n', '\0');
-  answer->replace('\r', '\0');
-}
-
-bool askBoolQuestion(const char *question) {
-  m->getNotifier()->message(0, 1, "%s\n(Press if true)", question);
-  delay(USER_DELAY_MS);
-  int answer = BUTTON_IS_PRESSED;
-  return (bool)answer;
-}
-
-void tuneServo(const char *name, int pin, Servo *servo, ServoConf *servoConf) {
-  servo->attach(pin);
-  servo->write(0);
-
-  m->getNotifier()->message(0, 1, "Tuning %s", name);
-  delay(USER_DELAY_MS);
-
-  m->getNotifier()->message(0, 1, "Press if arm moves...");
-  delay(SERVO_PERIOD_REACTION_MS * 10);
-  delay(USER_DELAY_MS);
-
-  int min = 100;
-  int max = 100;
-  int testRange = 200;
-
-  for (int d = 0; d <= testRange; d = d + 2) {
-    bool pressed = BUTTON_IS_PRESSED;
-    log(CLASS_MODULE, Info, "Moves: %d/%d (inrange=%s)", d, testRange, BOOL(pressed));
-    min = ((d < min) && pressed ? d : min);
-    max = ((d > max) && pressed ? d : max);
-    servo->write(d);
-    delay(SERVO_PERIOD_REACTION_MS * 10);
-  }
-
-  bool inv = askBoolQuestion("Is arm down?");
-  m->getNotifier()->message(0, 1, "Down: %s", BOOL(inv));
-  delay(USER_DELAY_MS);
-  m->getNotifier()->message(0, 1, "Setup %s done!", name);
-  delay(USER_DELAY_MS);
-
-  servoConf->setBase(min);
-  servoConf->setRange(max - min);
-  servoConf->setInvert(inv);
-
-  servo->detach();
-}
-
 CmdExecStatus commandArchitecture(const char *c) {
-  if (strcmp("servo", c) == 0) {
-    char servo = strtok(NULL, " ")[0];
-    Buffer serialized(16);
-    if (servo == 'r' || servo == 'R') {
-      tuneServo("right servo", SERVO1_PIN, &servoRight, servo1Conf);
-      servo1Conf->serialize(&serialized); // right servo1
-      writeFile(SERVO_1_FILENAME, serialized.getBuffer());
-      logUser("Stored tuning right servo");
-      arms(0, 0, 100);
-      arms(0, 9, 100);
-      arms(0, 0, 100);
-      return Executed;
-    } else if (servo == 'l' || servo == 'L') {
-      tuneServo("left servo", SERVO0_PIN, &servoLeft, servo0Conf);
-      servo0Conf->serialize(&serialized); // left servo0
-      writeFile(SERVO_0_FILENAME, serialized.getBuffer());
-      logUser("Stored tuning left servo");
-      arms(0, 0, 100);
-      arms(9, 0, 100);
-      arms(0, 0, 100);
-      return Executed;
-    } else {
-      logUser("Invalid servo (l|r)");
-      return InvalidArgs;
-    }
-  } else if (strcmp("init", c) == 0) {
+  if (strcmp("init", c) == 0) {
     logRawUser("-> Initialize");
     logRawUser("Execute:");
     logRawUser("   ls");
     logUser("   save %s <alias>", DEVICE_ALIAS_FILENAME);
     logUser("   save %s <pwd>", DEVICE_PWD_FILENAME);
-    logRawUser("   servo l");
-    logRawUser("   servo r");
     logRawUser("   wifissid <ssid>");
     logRawUser("   wifissid <ssid>");
     logRawUser("   wifipass <password>");
@@ -659,13 +557,6 @@ void debugHandle() {
   ArduinoOTA.handle(); // Handle on the air firmware load
 }
 
-ICACHE_RAM_ATTR
-void buttonPressed() {
-  if (buttonEnabled) {
-    buttonInterrupts++;
-  }
-  LED_INT_ON;
-}
 
 void bitmapToLcd(uint8_t bitmap[]) {
   for (char yi = 0; yi < 8; yi++) {
@@ -687,9 +578,7 @@ void reactCommandCustom() { // for the use via telnet
 }
 
 void heartbeat() {
-  LED_ALIVE_TOGGLE
   delay(1);
-  LED_ALIVE_TOGGLE
 }
 
 bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs) {
@@ -730,50 +619,16 @@ void handleInterrupt() {
     log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
     log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
     logUser("(%s => %s)", cmdBuffer.getBuffer(), CMD_EXEC_STATUS(execStatus));
-  } else if (buttonInterrupts > 0) {
-    buttonEnabled = false;
-    buttonInterrupts = 0; // to avoid interrupting whatever is called below
-    int holds = -1;
-    do {
-      holds++;
-      log(CLASS_MAIN, Debug, "%d", holds);
-      LED_INT_TOGGLE;
-      m->sequentialCommand(holds, ONLY_SHOW_MSG);
-      LED_INT_TOGGLE;
-      delay(m->getModuleSettings()->miniPeriodMsec());
-    } while (BUTTON_IS_PRESSED);
-    m->sequentialCommand(holds, SHOW_MSG_AND_REACT);
-    buttonEnabled = true;
-    log(CLASS_MAIN, Debug, "Done");
-  }
+  } 
 }
 
 bool haveToInterrupt() {
   if (Serial.available()) {
     log(CLASS_MAIN, Debug, "Serial pinged: int");
     return true;
-  } else if (buttonInterrupts > 0) {
-    log(CLASS_MAIN, Debug, "Button pressed: int");
-    return true;
   } else {
     return false;
   }
-}
-
-void initializeServoConfig(const char *tuningFilename, ServoConf **conf) {
-  Buffer aux(SERVO_CONF_SERIALIZED_MAX_LENGTH);
-  bool succServo0 = readFile(tuningFilename, &aux);
-  if (succServo0) {
-    aux.replace('\n', 0);
-    *conf = new ServoConf(aux.getBuffer());
-  } else {
-    *conf = new ServoConf();
-  }
-}
-
-void initializeServoConfigs() {
-  initializeServoConfig(SERVO_0_FILENAME, &servo0Conf);
-  initializeServoConfig(SERVO_1_FILENAME, &servo1Conf);
 }
 
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {

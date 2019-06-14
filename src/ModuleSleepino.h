@@ -19,7 +19,6 @@
   "\n  BOTINO HELP"                                                                                                                        \
   "\n  move ...        : execute a move (example: 'move A00C55')"                                                                          \
   "\n  lcd ...         : write on display <x> <y> <color> <wrap> <clear> <size> <str>"                                                     \
-  "\n  ack             : notification read"                                                                                                \
   "\n  help            : show this help"                                                                                                   \
   "\n"
 
@@ -53,10 +52,7 @@ public:
   }
 
   void setup(BotMode (*setupArchitectureFunc)(),
-             void (*lcdImgFunc)(char img, uint8_t bitmap[]),
-             void (*armsFunc)(int left, int right, int steps),
              void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str),
-             void (*iosFunc)(char led, IoMode v),
              bool (*initWifiFunc)(),
              int (*httpPostFunc)(const char *url, const char *body, ParamStream *response, Table *headers),
              int (*httpGetFunc)(const char *url, ParamStream *response, Table *headers),
@@ -94,17 +90,12 @@ public:
 
     message = messageFunc;
 
-    notifier->setup(lcdImgFunc, messageFunc);
+    notifier->setup(messageFunc);
   }
 
 
   bool startupProperties() {
     return module->startupProperties();
-  }
-
-  void ackCmd() {
-    notifier->notificationRead();
-    zCmd();
   }
 
   /**
@@ -122,11 +113,7 @@ public:
 
       char *c = strtok(b.getUnsafeBuffer(), " ");
 
-      if (strcmp("ack", c) == 0) {
-        ackCmd();
-        log(CLASS_MODULEB, Info, "Notification read");
-        return Executed;
-      } else if (strcmp("lcd", c) == 0) {
+      if (strcmp("lcd", c) == 0) {
         const char *x = strtok(NULL, " ");
         const char *y = strtok(NULL, " ");
         const char *color = strtok(NULL, " ");
@@ -159,43 +146,28 @@ public:
    */
   void sequentialCommand(int index, bool dryRun) {
     switch (index) {
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7: {
-        int ind = index - 0;
-        const char *mvName = getCommands()->getCmdName(ind);
-        getNotifier()->message(0, 2, "%s?", mvName);
-        if (!dryRun) {
-          command(getCommands()->getCmdValue(ind));
-        }
-      } break;
-      case 8: {
+      case 0: {
         getNotifier()->message(0, 2, "All act?");
         if (!dryRun) {
           module->actall();
           getNotifier()->message(0, 1, "All act one-off");
         }
       } break;
-      case 9: {
+      case 1: {
         getNotifier()->message(0, 2, "Config mode?");
         if (!dryRun) {
           module->confCmd();
           getNotifier()->message(0, 1, "In config mode");
         }
       } break;
-      case 10: {
+      case 2: {
         getNotifier()->message(0, 2, "Run mode?");
         if (!dryRun) {
           module->runCmd();
           getNotifier()->message(0, 1, "In run mode");
         }
       } break;
-      case 11: {
+      case 3: {
         getNotifier()->message(0, 2, "Show info?");
         if (!dryRun) {
           module->infoCmd();
@@ -203,9 +175,6 @@ public:
       } break;
       default: {
         getNotifier()->message(0, 2, "Abort?");
-        if (!dryRun) {
-        	zCmd();
-        }
       } break;
     }
   }

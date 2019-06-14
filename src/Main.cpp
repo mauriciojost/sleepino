@@ -27,10 +27,7 @@ bool initWifiSimple() {
 void setup() {
   m = new ModuleSleepino();
   m->setup(setupArchitecture,
-           lcdImg,
-           arms,
            messageFunc,
-           ios,
            initWifiSimple,
            httpPost,
            httpGet,

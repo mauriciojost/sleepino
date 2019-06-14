@@ -55,9 +55,6 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clear, int siz
 // Parameter steps defines how slow the movement is (1 being the fastest).
 void arms(int left, int right, int steps);
 
-// IO control function.
-void ios(char led, IoMode m);
-
 // Clear device (for development purposes, to clear logs, stacktraces, etc)
 void clearDevice();
 

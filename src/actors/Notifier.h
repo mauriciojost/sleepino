@@ -43,10 +43,9 @@ private:
   Metadata *md;
   Queue<MAX_NRO_NOTIFS, MAX_NOTIF_LENGTH> queue;
   void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
-  void((*lcdImgFunc)(char img, uint8_t bitmap[]));
 
   bool isInitialized() {
-    return lcdImgFunc != NULL && messageFunc != NULL;
+    return messageFunc != NULL;
   }
 
   void notify(bool forceClean) {
@@ -70,7 +69,6 @@ public:
     name = n;
     messageFunc = NULL;
     md = new Metadata(n);
-    lcdImgFunc = NULL;
     md->getTiming()->setFreq("never");
   }
 
@@ -78,28 +76,8 @@ public:
     return name;
   }
 
-  void setup(void (*i)(char img, uint8_t bitmap[]),
-             void (*m)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str)) {
-    lcdImgFunc = i;
+  void setup(void (*m)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str)) {
     messageFunc = m;
-  }
-
-  /**
-   * Display an LCD image.
-   *
-   * Initialization safe.
-   */
-  void lcdImg(char img, uint8_t bitmap[]) {
-    if (!isInitialized()) {
-      log(CLASS_NOTIFIER, Warn, "No init!");
-      return;
-    }
-    lcdImgFunc(img, bitmap);
-    notify(false); // apart from the image, also notify if notifications are available
-  }
-
-  void clearLcd() {
-    lcdImg('l', NULL);
   }
 
   /**
