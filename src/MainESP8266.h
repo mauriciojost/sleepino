@@ -31,6 +31,8 @@
 
 #define LCD_PIXEL_WIDTH 6
 #define LCD_PIXEL_HEIGHT 8
+#define LCD_DEFAULT_CONTRAST 50
+#define LCD_DEFAULT_BIAS 0x17
 
 #ifndef WIFI_DELAY_MS
 #define WIFI_DELAY_MS 4000
@@ -399,8 +401,8 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   delay(DELAY_MS_SPI);
-  lcd->begin(50);
-  lcd->clearDisplay();
+  lcd->begin(LCD_DEFAULT_CONTRAST, LCD_DEFAULT_BIAS);
+  lcd->display();
   delay(DELAY_MS_SPI);
 
   heartbeat();
