@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+export PORT=$1
+for i in `seq 1 10`
+do
+  pio -f -c atom serialports monitor --raw --port /dev/ttyUSB$PORT -b 115200 | libs/log4ino-arduino/extras/pretty-log | ts | tee serial.log
+done
