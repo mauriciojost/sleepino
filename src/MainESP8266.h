@@ -402,33 +402,16 @@ BotMode setupArchitecture() {
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   delay(DELAY_MS_SPI);
   lcd->begin(LCD_DEFAULT_CONTRAST, LCD_DEFAULT_BIAS);
-  lcd->display();
+  lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
-  while (true) {
-    log(CLASS_MAIN, Debug, "A");
-    lcd->clearDisplay();
-    lcd->setTextWrap(false);
-    lcd->setTextSize(1);
-    lcd->setTextColor(BLACK);
-    lcd->setCursor(0, 0);
-    lcd->print("AAA");
-    lcd->display();
-
-    delay(1000);
-
-    log(CLASS_MAIN, Debug, "BBB");
-    lcd->clearDisplay();
-    lcd->setTextWrap(false);
-    lcd->setTextSize(1);
-    lcd->setTextColor(BLACK);
-    lcd->setCursor(0, 0);
-    lcd->print("BBB");
-    lcd->display();
-
-    delay(1000);
-
-  }
+  lcd->clearDisplay();
+  lcd->setTextWrap(false);
+  lcd->setTextSize(1);
+  lcd->setTextColor(BLACK);
+  lcd->setCursor(0, 0);
+  lcd->print("booting...");
+  lcd->display();
 
   heartbeat();
 
@@ -454,9 +437,6 @@ BotMode setupArchitecture() {
   telnet.setHelpProjectsCmds(helpCli);
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup IO/lcd");
-  heartbeat();
-
   log(CLASS_MAIN, Debug, "Clean up crashes");
   if (SaveCrash.count() > 5) {
     log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
@@ -471,6 +451,40 @@ BotMode setupArchitecture() {
 
 void runModeArchitecture() {
   handleInterrupt();
+
+  while (true) {
+    log(CLASS_MAIN, Debug, "A");
+    lcd->clearDisplay();
+    lcd->setTextWrap(false);
+    lcd->setTextSize(1);
+    lcd->setTextColor(BLACK);
+    lcd->setCursor(0, 0);
+    lcd->print("AAA");
+    lcd->display();
+
+    delay(1000);
+
+    log(CLASS_MAIN, Debug, "BBB");
+    lcd->clearDisplay();
+    lcd->setTextWrap(false);
+    lcd->setTextSize(1);
+    lcd->setTextColor(BLACK);
+    lcd->setCursor(0, 0);
+    lcd->print("BBB");
+    lcd->display();
+
+    delay(1000);
+
+    messageFunc(0, 0, BLACK, false, FullClear, 1, "CCC");
+
+    delay(1000);
+
+    messageFunc(0, 0, BLACK, false, FullClear, 1, "DDD");
+
+    delay(1000);
+
+  }
+
   if (m->getModuleSettings()->getDebug()) {
     debugHandle();
   }

@@ -80,7 +80,7 @@ public:
     va_start(args, format);
     vsnprintf(buffer.getUnsafeBuffer(), MAX_MSG_LENGTH, format, args);
     buffer.getUnsafeBuffer()[MAX_MSG_LENGTH - 1] = 0;
-    messageFunc(0, line, BLACK, DO_WRAP, FullClear, size, buffer.getBuffer());
+    messageFunc(0, line, BLACK, DO_NOT_WRAP, FullClear, size, buffer.getBuffer());
     va_end(args);
 
   }
