@@ -34,6 +34,7 @@ private:
   SleepinoSettings *bsettings;
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
+  void (*commandFunc)(const char *str);
 
 public:
   ModuleSleepino() {
@@ -45,6 +46,7 @@ public:
     module->getActors()->add(1, (Actor *)bsettings);
 
     message = NULL;
+    commandFunc = NULL;
   }
 
   void setup(BotMode (*setupArchitectureFunc)(),
@@ -64,7 +66,9 @@ public:
              void (*updateFunc)(const char *),
              void (*testFunc)(),
              const char *(*apiDeviceLoginFunc)(),
-             const char *(*apiDevicePassFunc)()) {
+             const char *(*apiDevicePassFunc)(),
+             void (*cmdFunc)(const char*)
+  ) {
 
     module->setup(setupArchitectureFunc,
                   initWifiFunc,
@@ -85,6 +89,9 @@ public:
                   apiDevicePassFunc);
 
     message = messageFunc;
+    commandFunc = cmdFunc;
+
+    bsettings->setup(commandFunc);
 
   }
 

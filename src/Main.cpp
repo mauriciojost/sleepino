@@ -24,6 +24,10 @@ bool initWifiSimple() {
   return connected;
 }
 
+void commandFunc(const char* c) {
+	m->command(c);
+}
+
 void setup() {
   m = new ModuleSleepino();
   m->setup(setupArchitecture,
@@ -43,7 +47,9 @@ void setup() {
            updateFirmware,
            testArchitecture,
            apiDeviceLogin,
-           apiDevicePass);
+           apiDevicePass,
+           commandFunc
+  );
   bool succ = m->startupProperties();
   if (!succ) {
     abort("Could not startup");

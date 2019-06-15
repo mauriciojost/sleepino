@@ -6,6 +6,8 @@
 
 #define STATUS_BUFFER_SIZE 64
 
+#define COMMAND "update latest"
+
 enum SleepinoSettingsProps {
   SleepinoSettingsLcdLogsProp = 0, // boolean, define if the device display logs in LCD
   SleepinoSettingsStatusProp,      // string, defines the current general status of the device (vcc level, heap, etc)
@@ -21,6 +23,7 @@ private:
   Buffer *status;
   bool fsLogs;
   Metadata *md;
+  void (*command)(const char*);
 
 public:
   SleepinoSettings(const char *n) {
@@ -29,6 +32,12 @@ public:
     status = new Buffer(STATUS_BUFFER_SIZE);
     fsLogs = false;
     md = new Metadata(n);
+    md->getTiming()->setFreq("~48h");
+    command = NULL;
+  }
+
+  void setup(void(*cmd)(const char*)){
+  	command = cmd;
   }
 
   const char *getName() {
@@ -39,7 +48,13 @@ public:
     return SleepinoSettingsPropsDelimiter;
   }
 
-  void act() {}
+  void act() {
+    if (getTiming()->matches()) {
+    	if (command != NULL) {
+    		command(COMMAND);
+    	}
+    }
+  }
 
   const char *getPropName(int propIndex) {
     switch (propIndex) {
