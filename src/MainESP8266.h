@@ -392,13 +392,7 @@ BotMode setupArchitecture() {
   lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
-  lcd->clearDisplay();
-  lcd->setTextWrap(false);
-  lcd->setTextSize(1);
-  lcd->setTextColor(BLACK);
-  lcd->setCursor(0, 0);
-  lcd->print("booting...");
-  lcd->display();
+  messageFunc(0, 0, 1, false, FullClear, 1, "booting...");
 
   heartbeat();
 
