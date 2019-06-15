@@ -29,8 +29,8 @@
 
 #define MAX_DEEP_SLEEP_PERIOD_SECS 1800
 
-#define LCD_PIXEL_WIDTH 6
-#define LCD_PIXEL_HEIGHT 8
+#define LCD_PIXEL_WIDTH 5
+#define LCD_PIXEL_HEIGHT 7
 #define LCD_DEFAULT_CONTRAST 50
 #define LCD_DEFAULT_BIAS 0x17
 
@@ -136,11 +136,12 @@ void logLine(const char *str) {
   // lcd print
   if (lcd != NULL && m->getSleepinoSettings()->getLcdLogs()) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
+    int line = currentLogLine + 2;
     lcd->setTextWrap(false);
-    lcd->fillRect(0, currentLogLine * LCD_PIXEL_HEIGHT, 128, LCD_PIXEL_HEIGHT, BLACK);
+    lcd->fillRect(0, line * LCD_PIXEL_HEIGHT, 84, LCD_PIXEL_HEIGHT, BLACK);
     lcd->setTextSize(1);
-    lcd->setTextColor(WHITE);
-    lcd->setCursor(0, currentLogLine * LCD_PIXEL_HEIGHT);
+    lcd->setTextColor(BLACK);
+    lcd->setCursor(0, line * LCD_PIXEL_HEIGHT);
     lcd->print(str);
     lcd->display();
     delay(DELAY_MS_SPI);

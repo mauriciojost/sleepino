@@ -28,7 +28,7 @@ private:
 public:
   SleepinoSettings(const char *n) {
     name = n;
-    lcdLogs = false;
+    lcdLogs = true;
     status = new Buffer(STATUS_BUFFER_SIZE);
     fsLogs = false;
     md = new Metadata(n);
