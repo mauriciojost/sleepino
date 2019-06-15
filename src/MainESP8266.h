@@ -138,7 +138,7 @@ void logLine(const char *str) {
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
     int line = currentLogLine + 2;
     lcd->setTextWrap(false);
-    lcd->fillRect(0, line * LCD_PIXEL_HEIGHT, 84, LCD_PIXEL_HEIGHT, BLACK);
+    lcd->fillRect(0, line * LCD_PIXEL_HEIGHT, 84, LCD_PIXEL_HEIGHT, WHITE);
     lcd->setTextSize(1);
     lcd->setTextColor(BLACK);
     lcd->setCursor(0, line * LCD_PIXEL_HEIGHT);
@@ -365,6 +365,7 @@ bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
     }
     // calculate time to target next boot
     Timing t = Timing();
+    t.setCurrentTime(now());
     t.setFreqEverySecs((int)periodSecs);
     time_t toSleepSecs = t.secsToMatch(MAX_DEEP_SLEEP_PERIOD_SECS);
     deepSleepNotInterruptable(now(), toSleepSecs);
