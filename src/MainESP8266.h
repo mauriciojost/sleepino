@@ -362,7 +362,11 @@ bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
     if (interrupt) {
       return true;
     }
-    deepSleepNotInterruptable(cycleBegin, periodSecs);
+    // calculate time to target next boot
+    Timing t = Timing();
+    t.setFreqEverySecs((int)periodSecs);
+    time_t toSleepSecs = t.secsToMatch(MAX_DEEP_SLEEP_PERIOD_SECS);
+    deepSleepNotInterruptable(now(), toSleepSecs);
     return false; // won't be called ever
   } else {
     return lightSleepInterruptable(cycleBegin, periodSecs);
