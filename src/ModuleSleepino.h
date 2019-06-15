@@ -164,10 +164,6 @@ public:
   }
 
   void loop() {
-    Buffer timeAux(19);
-    Timing::humanize(getBot()->getClock()->currentTime(), &timeAux);
-    timeAux.replace(' ', '\n');
-    message(0, 0, 1, false, FullClear, 1, timeAux.getBuffer());
     module->loop();
   }
 };

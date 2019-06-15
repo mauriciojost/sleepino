@@ -431,6 +431,19 @@ BotMode setupArchitecture() {
 }
 
 void runModeArchitecture() {
+
+	// display lcd metrics (time, vcc, version)
+  Buffer timeAux(32);
+  Timing::humanize(m->getBot()->getClock()->currentTime(), &timeAux);
+  timeAux.replace(' ', '\n');
+
+  Buffer lcdAux(64);
+
+  lcdAux.fill("%s\nVcc: %0.3f\nV:%s", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION));
+
+  messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
+
+  // other
   handleInterrupt();
   if (m->getModuleSettings()->getDebug()) {
     debugHandle();
