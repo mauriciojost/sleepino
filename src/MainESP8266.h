@@ -274,9 +274,8 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
   lcd->setCursor(x * size * LCD_PIXEL_WIDTH, y * size * LCD_PIXEL_HEIGHT);
   lcd->print(str);
   lcd->display();
-  log(CLASS_MAIN, Debug, "Msg: (%d,%d)'%s'", x, y, str);
+  log(CLASS_MAIN, Debug, "Msg(%d,%d):%s", x, y, str);
   delay(DELAY_MS_SPI);
-  delay(3000);
 }
 
 void clearDevice() {
