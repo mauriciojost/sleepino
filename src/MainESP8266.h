@@ -48,7 +48,7 @@
 
 #define SERVO_PERIOD_REACTION_MS 15
 
-#define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 4)
+#define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 2)
 
 #define LOG_BUFFER_MAX_LENGTH 1024
 
@@ -136,7 +136,7 @@ void logLine(const char *str) {
   // lcd print
   if (lcd != NULL && m->getSleepinoSettings()->getLcdLogs()) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
-    int line = currentLogLine + 2;
+    int line = currentLogLine + 4;
     lcd->setTextWrap(false);
     lcd->fillRect(0, line * LCD_PIXEL_HEIGHT, 84, LCD_PIXEL_HEIGHT, WHITE);
     lcd->setTextSize(1);
