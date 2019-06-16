@@ -444,7 +444,7 @@ void runModeArchitecture() {
 
   Buffer lcdAux(64);
 
-  lcdAux.fill("%s\nVcc: %0.3f\nV:%s", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION));
+  lcdAux.fill("%s\nVcc: %0.4f\nV:%s", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION));
 
   messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
@@ -553,7 +553,7 @@ void debugHandle() {
     firstTime = false;
   }
 
-  m->getSleepinoSettings()->getStatus()->fill("vcc:%0.2f,heap:%d", VCC_FLOAT, ESP.getFreeHeap());
+  m->getSleepinoSettings()->getStatus()->fill("vcc:%0.4f,heap:%d", VCC_FLOAT, ESP.getFreeHeap());
   m->getSleepinoSettings()->getMetadata()->changed();
 
   if (m->getSleepinoSettings()->fsLogsEnabled()) {
