@@ -79,6 +79,9 @@ void updateFirmware(const char *descriptor);
 // Execution
 ///////////////////
 
+// Not interruptable sleep function.
+void sleepNotInterruptable(time_t cycleBegin, time_t periodSec);
+
 // Interruptable sleep function (haveToInterrupt called within).
 // Returns true if it was interrupted.
 bool sleepInterruptable(time_t cycleBegin, time_t periodSec);

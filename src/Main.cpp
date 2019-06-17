@@ -40,6 +40,7 @@ void setup() {
            writeFile,
            abort,
            sleepInterruptable,
+           deepSleepNotInterruptable,
            configureModeArchitecture,
            runModeArchitecture,
            commandArchitecture,

@@ -14,9 +14,9 @@
 #include <SPI.h>
 #include <Wire.h>
 
-#define DELAY_MS_SPI 3
+#define DELAY_MS_SPI 1
 #define ABORT_DELAY_SECS 5
-#define HW_STARTUP_DELAY_MSECS 500
+#define HW_STARTUP_DELAY_MSECS 10
 
 #define DEVICE_ALIAS_FILENAME "/alias.tuning"
 #define DEVICE_ALIAS_MAX_LENGTH 16
@@ -29,8 +29,7 @@
 
 #define SLEEP_PERIOD_UPON_ABORT_SEC 600
 
-#define MIN_DEEP_SLEEP_PERIOD_SECS 120
-#define MAX_DEEP_SLEEP_PERIOD_SECS 1800
+#define MAX_DEEP_SLEEP_PERIOD_SECS 2100 // 35 minutes
 
 #define LCD_PIXEL_WIDTH 6
 #define LCD_PIXEL_HEIGHT 8
@@ -104,7 +103,7 @@ void bitmapToLcd(uint8_t bitmap[]);
 void reactCommandCustom();
 void heartbeat();
 bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs);
-void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs);
+void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs);
 void debugHandle();
 bool haveToInterrupt();
 void handleInterrupt();
@@ -363,23 +362,24 @@ void updateFirmware(const char *descriptor) {
 // Execution
 ///////////////////
 
-bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
-  if (inDeepSleepMode() && m->getBot()->getMode() == RunMode && periodSecs > MIN_DEEP_SLEEP_PERIOD_SECS) { // in deep sleep mode and running
-    bool interrupt = lightSleepInterruptable(now() /* always do it */, PRE_DEEP_SLEEP_WINDOW_SECS);
-    if (interrupt) {
-      return true;
-    }
+void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
+	// calculate time to boot regularly at the same moments
+  Timing t = Timing();
+  time_t n = now();
+  t.setCurrentTime(n);
+  t.setFreqEverySecs((int)periodSecs);
+  time_t toSleepSecs = t.secsToMatch(MAX_DEEP_SLEEP_PERIOD_SECS);
 
-    // calculate time to target next boot
-    Timing t = Timing();
-    t.setCurrentTime(now());
-    t.setFreqEverySecs((int)periodSecs);
-    time_t toSleepSecs = t.secsToMatch(MAX_DEEP_SLEEP_PERIOD_SECS);
-    deepSleepNotInterruptable(now(), toSleepSecs);
-    return false; // won't be called ever
-  } else {
-    return lightSleepInterruptable(cycleBegin, periodSecs);
+  // light sleep to allow user intervention
+  bool inte = lightSleepInterruptable(n, PRE_DEEP_SLEEP_WINDOW_SECS);
+  if (!inte) {
+  	// if no intervention, deep sleep
+    deepSleepNotInterruptableSecs(n, toSleepSecs);
   }
+}
+
+bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
+  return lightSleepInterruptable(cycleBegin, periodSecs);
 }
 
 BotMode setupArchitecture() {
@@ -507,7 +507,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     return Executed;
   } else if (strcmp("deepsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
-    deepSleepNotInterruptable(now(), s);
+    deepSleepNotInterruptableSecs(now(), s);
     return Executed;
   } else if (strcmp("lightsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
@@ -532,10 +532,11 @@ void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
   bool interrupt = lightSleepInterruptable(now(), ABORT_DELAY_SECS);
   if (interrupt) {
-    log(CLASS_MAIN, Debug, "Abort sleep interrupted");
+    log(CLASS_MAIN, Debug, "Abort sleep interrupted (to configure mode)");
+    m->getBot()->setMode(ConfigureMode);
   } else if (inDeepSleepMode()) {
     log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
-    deepSleepNotInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
     bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
@@ -590,9 +591,7 @@ void reactCommandCustom() { // for the use via telnet
   m->command(telnet.getLastCommand().c_str());
 }
 
-void heartbeat() {
-  delay(1);
-}
+void heartbeat() { }
 
 bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs) {
   log(CLASS_MAIN, Debug, "Light Sleep(%ds)...", (int)periodSecs);
@@ -609,7 +608,7 @@ bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs) {
   return false;
 }
 
-void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
+void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs) {
   time_t p = (periodSecs > MAX_DEEP_SLEEP_PERIOD_SECS ? MAX_DEEP_SLEEP_PERIOD_SECS : periodSecs);
   log(CLASS_MAIN, Debug, "Deep Sleep(%ds)...", (int)p);
   time_t spentSecs = now() - cycleBegin;
