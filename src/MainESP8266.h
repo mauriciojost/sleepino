@@ -127,7 +127,7 @@ const char *apiDevicePass() {
 }
 
 void logLine(const char *str) {
-  Serial.setDebugOutput(getLogLevel() == Debug); // deep HW logs
+  Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   Serial.print(str);
   // telnet print
   if (telnet.isActive()) {
