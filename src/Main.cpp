@@ -48,7 +48,8 @@ void setup() {
            testArchitecture,
            apiDeviceLogin,
            apiDevicePass,
-           commandFunc
+           commandFunc,
+           inDeepSleepMode
   );
   bool succ = m->startupProperties();
   if (!succ) {
