@@ -27,6 +27,8 @@
 #define DEVICE_DSLEEP_FILENAME "/deepsleep.tuning"
 #define DEVICE_DSLEEP_MAX_LENGTH 1
 
+#define SLEEP_PERIOD_UPON_ABORT_SEC 600
+
 #define MAX_DEEP_SLEEP_PERIOD_SECS 1800
 
 #define LCD_PIXEL_WIDTH 6
@@ -366,6 +368,7 @@ bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
     if (interrupt) {
       return true;
     }
+
     // calculate time to target next boot
     Timing t = Timing();
     t.setCurrentTime(now());
@@ -531,10 +534,10 @@ void abort(const char *msg) {
     log(CLASS_MAIN, Debug, "Abort sleep interrupted");
   } else if (inDeepSleepMode()) {
     log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
-    deepSleepNotInterruptable(now(), m->getModuleSettings()->periodMsec() / 1000);
+    deepSleepNotInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
-    bool i = sleepInterruptable(now(), m->getModuleSettings()->periodMsec() / 1000L);
+    bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
     if (!i) {
       ESP.restart();
     } else {
