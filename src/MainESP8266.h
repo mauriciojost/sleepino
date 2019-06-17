@@ -530,7 +530,7 @@ void configureModeArchitecture() {
 
 void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
-  bool interrupt = sleepInterruptable(now(), ABORT_DELAY_SECS);
+  bool interrupt = lightSleepInterruptable(now(), ABORT_DELAY_SECS);
   if (interrupt) {
     log(CLASS_MAIN, Debug, "Abort sleep interrupted");
   } else if (inDeepSleepMode()) {
@@ -538,7 +538,7 @@ void abort(const char *msg) {
     deepSleepNotInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
-    bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
     if (!i) {
       ESP.restart();
     } else {
