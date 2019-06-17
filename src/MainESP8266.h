@@ -279,7 +279,11 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
 }
 
 void clearDevice() {
-  SPIFFS.format();
+  //SPIFFS.format();
+  logUser("   rm %s", DEVICE_ALIAS_FILENAME);
+  logUser("   rm %s", DEVICE_PWD_FILENAME);
+  logUser("   ls");
+  logUser("   <remove all .properties>");
   SaveCrash.clear();
 }
 
