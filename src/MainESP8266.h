@@ -27,6 +27,7 @@
 #define DEVICE_DSLEEP_FILENAME "/deepsleep.tuning"
 #define DEVICE_DSLEEP_MAX_LENGTH 1
 
+#define SLEEP_PERIOD_UPON_BOOT_SEC 3
 #define SLEEP_PERIOD_UPON_ABORT_SEC 600
 
 #define MAX_DEEP_SLEEP_PERIOD_SECS 2100 // 35 minutes
@@ -440,14 +441,20 @@ BotMode setupArchitecture() {
     SaveCrash.print();
   }
 
-  return RunMode;
+  bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
+  if (i) {
+    return ConfigureMode;
+  } else {
+    return RunMode;
+  }
+
 }
 
 void runModeArchitecture() {
 
 	// display lcd metrics (time, vcc, version)
   Buffer timeAux(32);
-  Timing::humanize(m->getBot()->getClock()->currentTime(), &timeAux);
+  Timing::humanize(m->getClock()->currentTime(), &timeAux);
   timeAux.replace(' ', '\n');
 
   Buffer lcdAux(64);
@@ -530,22 +537,13 @@ void configureModeArchitecture() {
 
 void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
-  bool interrupt = lightSleepInterruptable(now(), ABORT_DELAY_SECS);
-  if (interrupt) {
-    log(CLASS_MAIN, Debug, "Abort sleep interrupted (to configure mode)");
-    m->getBot()->setMode(ConfigureMode);
-  } else if (inDeepSleepMode()) {
+  if (inDeepSleepMode()) {
     log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
     deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
-    bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
-    if (!i) {
-      ESP.restart();
-    } else {
-      log(CLASS_MAIN, Warn, "Restart skipped because of interrupt.");
-      log(CLASS_MAIN, Warn, "System ready for exploration.");
-    }
+    lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    ESP.restart();
   }
 }
 

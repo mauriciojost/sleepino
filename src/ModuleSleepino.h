@@ -57,7 +57,6 @@ public:
              void (*clearDeviceFunc)(),
              bool (*fileReadFunc)(const char *fname, Buffer *content),
              bool (*fileWriteFunc)(const char *fname, const char *content),
-             void (*abortFunc)(const char *msg),
              bool (*sleepInterruptableFunc)(time_t cycleBegin, time_t periodSec),
              void (*deepSleepNotInterruptableFunc)(time_t cycleBegin, time_t periodSec),
              void (*configureModeArchitectureFunc)(),
@@ -79,7 +78,6 @@ public:
                   clearDeviceFunc,
                   fileReadFunc,
                   fileWriteFunc,
-                  abortFunc,
                   sleepInterruptableFunc,
                   deepSleepNotInterruptableFunc,
                   configureModeArchitectureFunc,
@@ -99,7 +97,7 @@ public:
 
   }
 
-  bool startupProperties() {
+  ModuleStartupPropertiesCode startupProperties() {
     return module->startupProperties();
   }
 
@@ -165,6 +163,10 @@ public:
 
   SerBot *getBot() {
     return module->getBot();
+  }
+
+  Clock *getClock() {
+    return module->getBot()->getClock();
   }
 
   void loop() {

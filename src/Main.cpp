@@ -38,7 +38,6 @@ void setup() {
            clearDevice,
            readFile,
            writeFile,
-           abort,
            sleepInterruptable,
            deepSleepNotInterruptable,
            configureModeArchitecture,
@@ -52,9 +51,9 @@ void setup() {
            commandFunc,
            inDeepSleepMode
   );
-  bool succ = m->startupProperties();
-  if (!succ) {
-    abort("Could not startup");
+  ModuleStartupPropertiesCode s = m->startupProperties();
+  if (s != ModuleStartupPropertiesCodeSuccess) {
+     abort("Cannot startup properties");
   }
 }
 
