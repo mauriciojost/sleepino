@@ -40,6 +40,9 @@ void logLine(const char *str);
 // Setup wifi using provided parameters.
 bool initWifi(const char *ssid, const char *pass, bool skipIfAlreadyConnected, int retries);
 
+// Stop wifi (and reduce power consumption).
+void stopWifi();
+
 // HTTP GET function.
 int httpGet(const char *url, ParamStream *response, Table *headers);
 

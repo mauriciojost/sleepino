@@ -27,7 +27,7 @@
 #define DEVICE_DSLEEP_FILENAME "/deepsleep.tuning"
 #define DEVICE_DSLEEP_MAX_LENGTH 1
 
-#define SLEEP_PERIOD_UPON_BOOT_SEC 3
+#define SLEEP_PERIOD_UPON_BOOT_SEC 2
 #define SLEEP_PERIOD_UPON_ABORT_SEC 600
 
 #define MAX_DEEP_SLEEP_PERIOD_SECS 2100 // 35 minutes
@@ -69,6 +69,8 @@
 #define SHOW_MSG_AND_REACT false
 
 #define WAIT_BEFORE_HTTP_MS 100
+
+#define FPM_SLEEP_MAX_TIME 0xFFFFFFF
 
 extern "C" {
 #include "user_interface.h"
@@ -159,9 +161,24 @@ void logLine(const char *str) {
   }
 }
 
+void stopWifi() {
+  log(CLASS_MAIN, Info, "Wifi off");
+	wifi_station_disconnect();
+	wifi_set_opmode(NULL_MODE);
+	wifi_set_sleep_type(MODEM_SLEEP_T);
+	wifi_fpm_open();
+	wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+}
+
 bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
   wl_status_t status;
   log(CLASS_MAIN, Info, "To '%s'...", ssid);
+
+  log(CLASS_MAIN, Info, "Wifi on");
+	wifi_fpm_do_wakeup();
+	wifi_fpm_close();
+	wifi_set_opmode(STATION_MODE);
+	wifi_station_connect();
 
   if (skipIfConnected) { // check if connected
     log(CLASS_MAIN, Info, "Conn. '%s'?", ssid);
@@ -401,7 +418,6 @@ BotMode setupArchitecture() {
 
   log(CLASS_MAIN, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
-  delay(DELAY_MS_SPI);
   lcd->begin(LCD_DEFAULT_CONTRAST, LCD_DEFAULT_BIAS);
   lcd->clearDisplay();
   delay(DELAY_MS_SPI);
@@ -441,6 +457,7 @@ BotMode setupArchitecture() {
     SaveCrash.print();
   }
 
+  log(CLASS_MAIN, Debug, "Letting user interrupt...");
   bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
     return ConfigureMode;
@@ -468,6 +485,7 @@ void runModeArchitecture() {
   if (m->getModuleSettings()->getDebug()) {
     debugHandle();
   }
+
 }
 
 CmdExecStatus commandArchitecture(const char *c) {
@@ -613,7 +631,7 @@ void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs) {
   time_t leftSecs = p - spentSecs;
   if (leftSecs > 0) {
     //lcd->command(PCD8544_FUNCTIONSET | PCD8544_POWERDOWN);
-    ESP.deepSleep(leftSecs * 1000000L);
+    ESP.deepSleep(leftSecs * 1000000L, WAKE_RF_DEFAULT);
   }
 }
 
@@ -682,3 +700,4 @@ void dumpLogBuffer() {
 bool inDeepSleepMode() {
   return (bool)atoi(initializeTuningVariable(&deepSleepMode, DEVICE_DSLEEP_FILENAME, DEVICE_DSLEEP_MAX_LENGTH, "0", false)->getBuffer());
 }
+

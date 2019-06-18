@@ -33,6 +33,7 @@ void setup() {
   m->setup(setupArchitecture,
            messageFunc,
            initWifiSimple,
+           stopWifi,
            httpPost,
            httpGet,
            clearDevice,

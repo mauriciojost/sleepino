@@ -52,6 +52,7 @@ public:
   void setup(BotMode (*setupArchitectureFunc)(),
              void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str),
              bool (*initWifiFunc)(),
+             void (*stopWifiFunc)(),
              int (*httpPostFunc)(const char *url, const char *body, ParamStream *response, Table *headers),
              int (*httpGetFunc)(const char *url, ParamStream *response, Table *headers),
              void (*clearDeviceFunc)(),
@@ -73,6 +74,7 @@ public:
 
     module->setup(setupArchitectureFunc,
                   initWifiFunc,
+                  stopWifiFunc,
                   httpPostFunc,
                   httpGetFunc,
                   clearDeviceFunc,
