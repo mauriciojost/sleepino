@@ -38,7 +38,7 @@
 #define LCD_DEFAULT_BIAS 0x17
 
 #ifndef WIFI_DELAY_MS
-#define WIFI_DELAY_MS 4000
+#define WIFI_DELAY_MS 10000
 #endif // WIFI_DELAY_MS
 
 #define MAX_ROUND_ROBIN_LOG_FILES 5
@@ -60,7 +60,7 @@
 #endif // URL_PRINT_MAX_LENGTH
 
 #ifndef USER_DELAY_MS
-#define USER_DELAY_MS 4000
+#define USER_DELAY_MS 2000
 #endif // USER_DELAY_MS
 
 #define VCC_FLOAT ((float)ESP.getVcc() / 1024)
@@ -162,7 +162,7 @@ void logLine(const char *str) {
 }
 
 void stopWifi() {
-  log(CLASS_MAIN, Info, "Wifi off");
+  log(CLASS_MAIN, Debug, "Wifi off...");
 	wifi_station_disconnect();
 	wifi_set_opmode(NULL_MODE);
 	wifi_set_sleep_type(MODEM_SLEEP_T);
@@ -172,7 +172,7 @@ void stopWifi() {
 
 bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
   wl_status_t status;
-  log(CLASS_MAIN, Info, "To '%s'...", ssid);
+  log(CLASS_MAIN, Info, "Init wifi '%s'...", ssid);
 
   log(CLASS_MAIN, Info, "Wifi on");
 	wifi_fpm_do_wakeup();
@@ -184,17 +184,19 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
     log(CLASS_MAIN, Info, "Conn. '%s'?", ssid);
     status = WiFi.status();
     if (status == WL_CONNECTED) {
-      log(CLASS_MAIN, Info, "IP: %s", WiFi.localIP().toString().c_str());
+      log(CLASS_MAIN, Debug, "Already connected! %s", WiFi.localIP().toString().c_str());
       return true; // connected
     }
-  } else { // force disconnection
-    log(CLASS_MAIN, Info, "W.Off.");
+  } else {
+    log(CLASS_MAIN, Debug, "Not connected...");
+    log(CLASS_MAIN, Debug, "Forcing disconnection...");
     WiFi.disconnect();
     delay(WIFI_DELAY_MS);
     WiFi.mode(WIFI_OFF); // to be removed after SDK update to 1.5.4
     delay(WIFI_DELAY_MS);
   }
 
+  log(CLASS_MAIN, Debug, "Connecting...");
   WiFi.mode(WIFI_STA);
   delay(WIFI_DELAY_MS);
   WiFi.begin(ssid, pass);
@@ -203,18 +205,18 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
   while (true) {
     bool interrupt = lightSleepInterruptable(now(), WIFI_DELAY_MS / 1000);
     if (interrupt) {
-      log(CLASS_MAIN, Info, "Interrupted");
+      log(CLASS_MAIN, Warn, "Wifi init interrupted");
       return false; // not connected
     }
     status = WiFi.status();
-    log(CLASS_MAIN, Info, "..'%s'(%d)", ssid, attemptsLeft);
+    log(CLASS_MAIN, Debug, "..'%s'(%d left)", ssid, attemptsLeft);
     attemptsLeft--;
     if (status == WL_CONNECTED) {
-      log(CLASS_MAIN, Info, "IP: %s", WiFi.localIP().toString().c_str());
+      log(CLASS_MAIN, Debug, "Connected! %s", WiFi.localIP().toString().c_str());
       return true; // connected
     }
     if (attemptsLeft < 0) {
-      log(CLASS_MAIN, Warn, "Conn. to '%s' failed %d", ssid, status);
+      log(CLASS_MAIN, Warn, "Connection to '%s' failed %d", ssid, status);
       return false; // not connected
     }
   }
@@ -318,7 +320,7 @@ bool readFile(const char *fname, Buffer *content) {
   } else {
     String s = f.readString();
     content->load(s.c_str());
-    log(CLASS_MAIN, Info, "File read: %s", fname);
+    log(CLASS_MAIN, Debug, "File read: %s", fname);
     success = true;
   }
   SPIFFS.end();
@@ -334,7 +336,7 @@ bool writeFile(const char *fname, const char *content) {
     success = false;
   } else {
     f.write((const uint8_t *)content, strlen(content));
-    log(CLASS_MAIN, Info, "File written: %s", fname);
+    log(CLASS_MAIN, Debug, "File written: %s", fname);
     success = true;
   }
   SPIFFS.end();
@@ -369,10 +371,10 @@ void updateFirmware(const char *descriptor) {
           ESPhttpUpdate.getLastErrorString().c_str());
       break;
     case HTTP_UPDATE_NO_UPDATES:
-      log(CLASS_MAIN, Info, "No updates.");
+      log(CLASS_MAIN, Debug, "No updates.");
       break;
     case HTTP_UPDATE_OK:
-      log(CLASS_MAIN, Info, "Done!");
+      log(CLASS_MAIN, Debug, "Done!");
       break;
   }
 }
@@ -676,9 +678,9 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
   }
   if (first) {
     if (obfuscate) {
-      log(CLASS_MAIN, Info, "Tuning: %s=***", filename);
+      log(CLASS_MAIN, Debug, "Tuning: %s=***", filename);
     } else {
-      log(CLASS_MAIN, Info, "Tuning: %s=%s", filename, (*var)->getBuffer());
+      log(CLASS_MAIN, Debug, "Tuning: %s=%s", filename, (*var)->getBuffer());
     }
   }
   return *var;
