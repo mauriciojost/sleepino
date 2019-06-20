@@ -165,8 +165,11 @@ void logLine(const char *str) {
 
 void stopWifi() {
   log(CLASS_MAIN, Debug, "Wifi off...");
+  wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
   wifi_fpm_open();
-  wifi_fpm_do_sleep(40000);
+  wifi_enable_gpio_wakeup(12, GPIO_PIN_INTR_LOLEVEL);
+  wifi_fpm_do_sleep(0xFFFFFFF);
+  //wifi_fpm_do_sleep(2 * 1000 * 1000);
   wifi_fpm_close();
 }
 
