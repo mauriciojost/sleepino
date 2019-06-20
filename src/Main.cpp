@@ -20,7 +20,7 @@ ModuleSleepino *m;
 bool initWifiSimple() {
   Settings *s = m->getModuleSettings();
   log(CLASS_MAIN, Info, "W.steady");
-  bool connected = initWifi(s->getSsid(), s->getPass(), true, 10);
+  bool connected = initWifi(s->getSsid(), s->getPass(), true, 3);
   return connected;
 }
 
@@ -53,7 +53,7 @@ void setup() {
            inDeepSleepMode
   );
   ModuleStartupPropertiesCode s = m->startupProperties();
-  if (s != ModuleStartupPropertiesCodeSuccess) {
+  if (s != ModuleStartupPropertiesCodeSuccess && s != ModuleStartupPropertiesCodeSkipped) {
      abort("Cannot startup properties");
   }
 }
