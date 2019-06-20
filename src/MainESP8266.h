@@ -166,6 +166,7 @@ void logLine(const char *str) {
 void stopWifi() {
   log(CLASS_MAIN, Debug, "Wifi off...");
   wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
+	//wifi_station_disconnect();
   wifi_fpm_open();
   wifi_enable_gpio_wakeup(12, GPIO_PIN_INTR_LOLEVEL);
   wifi_fpm_do_sleep(0xFFFFFFF);
@@ -199,7 +200,7 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
   } else {
     log(CLASS_MAIN, Debug, "Not connected...");
     log(CLASS_MAIN, Debug, "Forcing disconnection...");
-    WiFi.disconnect();
+    //WiFi.disconnect();
     delay(WIFI_DELAY_MS);
     WiFi.mode(WIFI_OFF); // to be removed after SDK update to 1.5.4
     delay(WIFI_DELAY_MS);
