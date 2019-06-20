@@ -12,8 +12,6 @@
 
 #define COMMAND_MAX_LENGTH 128
 
-#define PERIOD_CONFIGURE_MSEC 4000
-
 #define HELP_COMMAND_CLI_PROJECT                                                                                                           \
   "\n  BOTINO HELP"                                                                                                                        \
   "\n  move ...        : execute a move (example: 'move A00C55')"                                                                          \
