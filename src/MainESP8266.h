@@ -99,6 +99,8 @@ Buffer *apiDevicePwd = NULL;
 Buffer *deepSleepMode = NULL;
 int currentLogLine = 0;
 Buffer *logBuffer = NULL;
+Buffer *cmdBuffer = NULL;
+Buffer *cmdLast = NULL;
 
 ADC_MODE(ADC_VCC);
 
@@ -416,9 +418,13 @@ BotMode setupArchitecture() {
 
   // Intialize the logging framework
   Serial.begin(115200);     // Initialize serial port
-  Serial.setTimeout(10000); // Timeout for read
+  Serial.setTimeout(10); // Timeout for read
   setupLog(logLine);
   log(CLASS_MAIN, Info, "Log initialized");
+
+  log(CLASS_MAIN, Debug, "Setup cmds");
+  cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
+  cmdLast = new Buffer(COMMAND_MAX_LENGTH);
 
   log(CLASS_MAIN, Debug, "Setup timing");
   setExternalMillis(millis);
@@ -648,16 +654,37 @@ void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs) {
 void handleInterrupt() {
   if (Serial.available()) {
     // Handle serial commands
-    Buffer cmdBuffer(COMMAND_MAX_LENGTH);
-    log(CLASS_MAIN, Info, "Listening...");
-    Serial.readBytesUntil('\n', cmdBuffer.getUnsafeBuffer(), COMMAND_MAX_LENGTH);
-    cmdBuffer.replace('\n', 0);
-    cmdBuffer.replace('\r', 0);
-    CmdExecStatus execStatus = m->command(cmdBuffer.getBuffer());
-    bool interrupt = (execStatus == ExecutedInterrupt);
-    log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
-    log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
-    logUser("(%s => %s)", cmdBuffer.getBuffer(), CMD_EXEC_STATUS(execStatus));
+  	uint8_t c;
+
+    size_t n = Serial.readBytes(&c, 1);
+
+    if (c == 0x08 && n == 1) { // backspace
+      log(CLASS_MAIN, Debug, "Backspace");
+    	if (cmdBuffer->getLength() > 0) {
+        cmdBuffer->getUnsafeBuffer()[cmdBuffer->getLength() - 1] = 0;
+    	}
+    } else if (c == 0x1b && n == 1) { // up/down
+      log(CLASS_MAIN, Debug, "Up/down");
+    	cmdBuffer->load(cmdLast);
+    } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
+      log(CLASS_MAIN, Debug, "Enter");
+    	if (cmdBuffer->getLength() > 0) {
+        CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
+        bool interrupt = (execStatus == ExecutedInterrupt);
+        log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
+        log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
+        logUser("('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
+        cmdLast->load(cmdBuffer);
+        cmdBuffer->clear();
+    	}
+    } else if (n == 1){
+      cmdBuffer->append(c);
+    }
+
+    // echo
+    logUser("> %s", cmdBuffer->getBuffer());
+
+
   }
 }
 

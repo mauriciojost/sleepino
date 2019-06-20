@@ -108,7 +108,7 @@ public:
 
     {
       Buffer b(cmd);
-      logUser("\n> %s\n", b.getBuffer());
+      log(CLASS_MODULEB, Debug, "\n> %s\n", b.getBuffer());
 
       if (b.getLength() == 0) {
         return NotFound;
