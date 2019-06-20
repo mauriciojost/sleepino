@@ -174,14 +174,19 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
   wl_status_t status;
   log(CLASS_MAIN, Info, "Init wifi '%s'...", ssid);
 
-  log(CLASS_MAIN, Info, "Wifi on");
-	wifi_fpm_do_wakeup();
-	wifi_fpm_close();
-	wifi_set_opmode(STATION_MODE);
-	wifi_station_connect();
+  bool wifiIsOff = (wifi_get_opmode() == NULL_MODE);
+  if (wifiIsOff) {
+    log(CLASS_MAIN, Debug, "Wifi off, turning on...");
+    wifi_fpm_do_wakeup();
+    wifi_fpm_close();
+    wifi_set_opmode(STATION_MODE);
+    wifi_station_connect();
+  } else {
+    log(CLASS_MAIN, Debug, "Wifi on already");
+  }
 
   if (skipIfConnected) { // check if connected
-    log(CLASS_MAIN, Info, "Conn. '%s'?", ssid);
+    log(CLASS_MAIN, Debug, "Already connected to '%s'?", ssid);
     status = WiFi.status();
     if (status == WL_CONNECTED) {
       log(CLASS_MAIN, Debug, "Already connected! %s", WiFi.localIP().toString().c_str());
@@ -383,15 +388,17 @@ void updateFirmware(const char *descriptor) {
 ///////////////////
 
 void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
-	// calculate time to boot regularly at the same moments
   Timing t = Timing();
   time_t n = now();
+
+  // light sleep to allow user intervention
+  bool inte = lightSleepInterruptable(n, PRE_DEEP_SLEEP_WINDOW_SECS);
+
+	// calculate time to boot regularly at the same moments
   t.setCurrentTime(n);
   t.setFreqEverySecs((int)periodSecs);
   time_t toSleepSecs = t.secsToMatch(MAX_DEEP_SLEEP_PERIOD_SECS);
 
-  // light sleep to allow user intervention
-  bool inte = lightSleepInterruptable(n, PRE_DEEP_SLEEP_WINDOW_SECS);
   if (!inte) {
   	// if no intervention, deep sleep
     deepSleepNotInterruptableSecs(n, toSleepSecs);
@@ -434,6 +441,7 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup wifi");
   WiFi.persistent(false);
   WiFi.hostname(apiDeviceLogin());
+  stopWifi();
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup http");
