@@ -166,9 +166,8 @@ void logLine(const char *str) {
 void stopWifi() {
   log(CLASS_MAIN, Debug, "Wifi off...");
 	wifi_set_sleep_type(LIGHT_SLEEP_T);
-  sint8 i = wifi_fpm_do_sleep(4000000);
-  log(CLASS_MAIN, Info, "Set fpm do sleep '%d'...", (int)i);
-	wifi_station_disconnect();
+  WiFi.disconnect();
+  //delay(10000);
 }
 
 bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
