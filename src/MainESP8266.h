@@ -169,7 +169,7 @@ void stopWifi() {
 	//wifi_station_disconnect();
   wifi_fpm_open();
   wifi_enable_gpio_wakeup(12, GPIO_PIN_INTR_LOLEVEL);
-  wifi_fpm_do_sleep(0xFFFFFFF);
+  //wifi_fpm_do_sleep(0xFFFFFFF);
   //wifi_fpm_do_sleep(2 * 1000 * 1000);
   wifi_fpm_close();
 }
