@@ -165,12 +165,11 @@ void logLine(const char *str) {
 
 void stopWifi() {
   log(CLASS_MAIN, Debug, "Wifi off...");
-	WiFi.disconnect();
-  //WiFi.mode(WIFI_OFF); // to be removed after SDK update to 1.5.4
+	//WiFi.disconnect(true);
 	wifi_set_sleep_type(LIGHT_SLEEP_T);
-	wifi_station_disconnect();
-	wifi_set_opmode(NULL_MODE);
 	wifi_fpm_open();
+	//wifi_station_disconnect();
+	//wifi_set_opmode(NULL_MODE);
 	wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
 }
 
