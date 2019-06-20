@@ -684,7 +684,6 @@ void handleInterrupt() {
     // echo
     logUser("> %s", cmdBuffer->getBuffer());
 
-
   }
 }
 
