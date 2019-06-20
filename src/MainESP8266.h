@@ -165,12 +165,12 @@ void logLine(const char *str) {
 
 void stopWifi() {
   log(CLASS_MAIN, Debug, "Wifi off...");
-	//WiFi.disconnect(true);
 	wifi_set_sleep_type(LIGHT_SLEEP_T);
+	WiFi.disconnect(true);
 	wifi_fpm_open();
-	//wifi_station_disconnect();
-	//wifi_set_opmode(NULL_MODE);
-	wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+	wifi_station_disconnect();
+	wifi_set_opmode(NULL_MODE);
+	wifi_fpm_do_sleep(3000000);
 }
 
 bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
