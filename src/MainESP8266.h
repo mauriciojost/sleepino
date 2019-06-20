@@ -359,7 +359,7 @@ void updateFirmware(const char *descriptor) {
 
   log(CLASS_MAIN, Info, "Updating firmware from '%s'...", url.getBuffer());
 
-  t_httpUpdate_return ret = updater.update(url.getBuffer());
+  t_httpUpdate_return ret = updater.update(url.getBuffer(), STRINGIFY(PROJ_VERSION));
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       log(CLASS_MAIN,
