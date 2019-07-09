@@ -580,8 +580,12 @@ void abort(const char *msg) {
     deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
-    lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
-    ESP.restart();
+    bool inte = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    if (!inte) {
+      ESP.restart();
+    } else {
+    	m->getBot()->setMode(ConfigureMode);
+    }
   }
 }
 
