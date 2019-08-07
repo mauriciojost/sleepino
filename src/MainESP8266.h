@@ -30,6 +30,8 @@
 #define SLEEP_PERIOD_UPON_BOOT_SEC 2
 #define SLEEP_PERIOD_UPON_ABORT_SEC 600
 
+#define SLEEP_PERIOD_PRE_ABORT_SEC 5
+
 #define MAX_DEEP_SLEEP_PERIOD_SECS 2100 // 35 minutes
 
 #define LCD_PIXEL_WIDTH 6
@@ -573,7 +575,13 @@ void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
   if (inDeepSleepMode()) {
     log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
-    deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    bool inte = lightSleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
+    if (!inte) {
+      deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    } else {
+      m->getBot()->setMode(ConfigureMode);
+      log(CLASS_MAIN, Warn, "Abort skipped");
+    }
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
     bool inte = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
