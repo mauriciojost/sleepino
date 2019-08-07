@@ -46,4 +46,8 @@
 #define LCD_CS_PIN GPIO5_PIN
 #define LCD_RST_PIN GPIO14_PIN
 
+// DEEP SLEEP
+
+// GPIO16_PIN -> REST if deep sleep enabled on ESP8266
+
 #endif // PINOUT_INC
