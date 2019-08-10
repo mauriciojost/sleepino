@@ -74,6 +74,12 @@
 
 #define FPM_SLEEP_MAX_TIME 0xFFFFFFF
 
+enum WifiNetwork {
+  WifiNoNetwork = 0,
+  WifiMainNetwork,
+  WifiBackupNetwork
+};
+
 extern "C" {
 #include "user_interface.h"
 }
@@ -176,9 +182,28 @@ void stopWifi() {
   }
 }
 
+WifiNetwork chooseWifi(const char* ssid, const char* ssidb) {
+  int n = WiFi.scanNetworks();
+  for (int i = 0; i < n; ++i) {
+    String s = WiFi.SSID(i);
+    if (strcmp(s.c_str(), ssid) == 0) {
+      log(CLASS_MAIN, Info, "Wifi found '%s'", ssid);
+    	return WifiMainNetwork;
+    } else if  (strcmp(s.c_str(), ssidb) == 0) {
+      log(CLASS_MAIN, Info, "Wifi found '%s'", ssidb);
+    	return WifiBackupNetwork;
+    }
+  }
+  return WifiNoNetwork;
+}
+
 bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
   wl_status_t status;
-  log(CLASS_MAIN, Info, "Init wifi '%s'...", ssid);
+
+  const char* ssidb = m->getSleepinoSettings()->getBackupWifiSsid()->getBuffer();
+  const char* passb = m->getSleepinoSettings()->getBackupWifiPass()->getBuffer();
+
+  log(CLASS_MAIN, Info, "Init wifi '%s' (or '%s')...", ssid, ssidb);
 
   bool wifiIsOff = (wifi_get_opmode() == NULL_MODE);
   if (wifiIsOff) {
@@ -192,7 +217,7 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
   }
 
   if (skipIfConnected) { // check if connected
-    log(CLASS_MAIN, Debug, "Already connected to '%s'?", ssid);
+    log(CLASS_MAIN, Debug, "Already connected?");
     status = WiFi.status();
     if (status == WL_CONNECTED) {
       log(CLASS_MAIN, Debug, "Already connected! %s", WiFi.localIP().toString().c_str());
@@ -207,10 +232,22 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
     delay(WIFI_DELAY_MS);
   }
 
+  log(CLASS_MAIN, Debug, "Scanning...");
+  WifiNetwork w = chooseWifi(ssid, ssidb);
+
   log(CLASS_MAIN, Debug, "Connecting...");
   WiFi.mode(WIFI_STA);
   delay(WIFI_DELAY_MS);
-  WiFi.begin(ssid, pass);
+  switch (w) {
+  	case WifiMainNetwork:
+      WiFi.begin(ssid, pass);
+      break;
+  	case WifiBackupNetwork:
+      WiFi.begin(ssidb, passb);
+      break;
+  	default:
+  		return false;
+  }
 
   int attemptsLeft = retries;
   while (true) {
