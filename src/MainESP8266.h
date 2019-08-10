@@ -707,34 +707,37 @@ void handleInterrupt() {
     // Handle serial commands
   	uint8_t c;
 
-    size_t n = Serial.readBytes(&c, 1);
+  	while (true) {
+      size_t n = Serial.readBytes(&c, 1);
 
-    if (c == 0x08 && n == 1) { // backspace
-      log(CLASS_MAIN, Debug, "Backspace");
-    	if (cmdBuffer->getLength() > 0) {
-        cmdBuffer->getUnsafeBuffer()[cmdBuffer->getLength() - 1] = 0;
-    	}
-    } else if (c == 0x1b && n == 1) { // up/down
-      log(CLASS_MAIN, Debug, "Up/down");
-    	cmdBuffer->load(cmdLast);
-    } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
-      log(CLASS_MAIN, Debug, "Enter");
-    	if (cmdBuffer->getLength() > 0) {
-        CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
-        bool interrupt = (execStatus == ExecutedInterrupt);
-        log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
-        log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
-        logUser("('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
-        cmdLast->load(cmdBuffer);
-        cmdBuffer->clear();
-    	}
-    } else if (n == 1){
-      cmdBuffer->append(c);
-    }
-
-    // echo
-    logUser("> %s", cmdBuffer->getBuffer());
-
+      if (c == 0x08 && n == 1) { // backspace
+        log(CLASS_MAIN, Debug, "Backspace");
+        if (cmdBuffer->getLength() > 0) {
+          cmdBuffer->getUnsafeBuffer()[cmdBuffer->getLength() - 1] = 0;
+        }
+      } else if (c == 0x1b && n == 1) { // up/down
+        log(CLASS_MAIN, Debug, "Up/down");
+        cmdBuffer->load(cmdLast);
+      } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
+        log(CLASS_MAIN, Debug, "Enter");
+        if (cmdBuffer->getLength() > 0) {
+          CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
+          bool interrupt = (execStatus == ExecutedInterrupt);
+          log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
+          log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
+          logUser("('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
+          cmdLast->load(cmdBuffer);
+          cmdBuffer->clear();
+        }
+        break;
+      } else if (n == 1){
+        cmdBuffer->append(c);
+      }
+      // echo
+      logUser("> %s", cmdBuffer->getBuffer());
+      while(!Serial.available()) {delay(100);}
+  	}
+    log(CLASS_MAIN, Debug, "Done with interrupt");
   }
 }
 
