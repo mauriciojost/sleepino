@@ -12,10 +12,12 @@
 #define UPDATE_COMMAND "update %s"
 
 enum SleepinoSettingsProps {
-  SleepinoSettingsLcdLogsProp = 0, // boolean, define if the device display logs in LCD
-  SleepinoSettingsStatusProp,      // string, defines the current general status of the device (vcc level, heap, etc)
-  SleepinoSettingsFsLogsProp,      // boolean, define if logs are to be dumped in the file system (only in debug mode)
-  SleepinoSettingsUpdateTargetProp,// string, target version of firmware to update to
+  SleepinoSettingsLcdLogsProp = 0,   // boolean, define if the device display logs in LCD
+  SleepinoSettingsStatusProp,        // string, defines the current general status of the device (vcc level, heap, etc)
+  SleepinoSettingsFsLogsProp,        // boolean, define if logs are to be dumped in the file system (only in debug mode)
+  SleepinoSettingsUpdateTargetProp,  // string, target version of firmware to update to
+  SleepinoSettingsWifiSsidBackupProp,// string, ssid for backup wifi network
+  SleepinoSettingsWifiPassBackupProp,// string, pass for backup wifi network
   SleepinoSettingsPropsDelimiter
 };
 
@@ -27,6 +29,8 @@ private:
   Buffer *status;
   bool fsLogs;
   Buffer *target;
+  Buffer *ssidb;
+  Buffer *passb;
   Metadata *md;
   void (*command)(const char*);
 
@@ -38,6 +42,10 @@ public:
     fsLogs = false;
     target = new Buffer(TARGET_BUFFER_SIZE);
     target->load(SKIP_UPDATES_CODE);
+    ssidb = new Buffer(20);
+    ssidb->load("defaultssid");
+    passb = new Buffer(20);
+    passb->load("defaultssid");
     md = new Metadata(n);
     md->getTiming()->setFreq("~24h");
     command = NULL;
@@ -78,6 +86,10 @@ public:
         return DEBUG_PROP_PREFIX "fslogs";
       case (SleepinoSettingsUpdateTargetProp):
         return ADVANCED_PROP_PREFIX "target";
+      case (SleepinoSettingsWifiSsidBackupProp):
+        return SENSITIVE_PROP_PREFIX "ssidb";
+      case (SleepinoSettingsWifiPassBackupProp):
+        return SENSITIVE_PROP_PREFIX "passb";
       default:
         return "";
     }
@@ -96,6 +108,12 @@ public:
         break;
       case (SleepinoSettingsUpdateTargetProp):
         setPropValue(m, targetValue, actualValue, target);
+        break;
+      case (SleepinoSettingsWifiSsidBackupProp):
+        setPropValue(m, targetValue, actualValue, ssidb);
+        break;
+      case (SleepinoSettingsWifiPassBackupProp):
+        setPropValue(m, targetValue, actualValue, passb);
         break;
       default:
         break;
@@ -119,6 +137,14 @@ public:
 
   bool getLcdLogs() {
     return lcdLogs;
+  }
+
+  Buffer *getBackupWifiSsid() {
+    return ssidb;
+  }
+
+  Buffer *getBackupWifiPass() {
+    return passb;
   }
 };
 
