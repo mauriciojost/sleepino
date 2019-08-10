@@ -49,5 +49,7 @@
 // DEEP SLEEP
 
 // GPIO16_PIN -> REST if deep sleep enabled on ESP8266
+// GND -> capacitor 47uF -> Vcc
+
 
 #endif // PINOUT_INC
