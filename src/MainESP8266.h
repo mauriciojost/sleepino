@@ -166,12 +166,14 @@ void logLine(const char *str) {
 }
 
 void stopWifi() {
-  log(CLASS_MAIN, Debug, "Wifi off...");
-	wifi_station_disconnect();
-	wifi_set_opmode(NULL_MODE);
-	wifi_set_sleep_type(MODEM_SLEEP_T);
-	wifi_fpm_open();
-	wifi_fpm_do_sleep(FPM_SLEEP_MAX_TIME);
+  if (!inDeepSleepMode()) {
+    log(CLASS_MAIN, Debug, "Wifi off...");
+    wifi_station_disconnect();
+    wifi_set_opmode(NULL_MODE);
+    wifi_set_sleep_type(MODEM_SLEEP_T);
+  } else {
+    log(CLASS_MAIN, Debug, "Skip wifi off...");
+  }
 }
 
 bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
