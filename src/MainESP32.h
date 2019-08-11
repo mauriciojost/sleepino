@@ -459,6 +459,7 @@ BotMode setupArchitecture() {
 
   //log(CLASS_MAIN, Debug, "Setup wdt");
   //ESP.wdtEnable(1); // argument not used
+
   log(CLASS_MAIN, Debug, "Setup wifi");
   WiFi.persistent(false);
   WiFi.setHostname(apiDeviceLogin());
@@ -477,17 +478,6 @@ BotMode setupArchitecture() {
   String helpCli("Type 'help' for help");
   telnet.setHelpProjectsCmds(helpCli);
   heartbeat();
-
-  /*
-  log(CLASS_MAIN, Debug, "Clean up crashes");
-  if (SaveCrash.count() > 5) {
-    log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
-    SaveCrash.clear();
-  } else if (SaveCrash.count() > 0) {
-    log(CLASS_MAIN, Warn, "Stack-trcs (!!!)");
-    SaveCrash.print();
-  }
-  */
 
   log(CLASS_MAIN, Debug, "Letting user interrupt...");
   bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
