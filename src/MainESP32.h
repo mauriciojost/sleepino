@@ -28,6 +28,9 @@
 #define DEVICE_DSLEEP_FILENAME "/deepsleep.tuning"
 #define DEVICE_DSLEEP_MAX_LENGTH 1
 
+#define DEVICE_CONTRAST_FILENAME "/contrast.tuning"
+#define DEVICE_CONTRAST_MAX_LENGTH 3
+
 #define SLEEP_PERIOD_UPON_BOOT_SEC 2
 #define SLEEP_PERIOD_UPON_ABORT_SEC 600
 
@@ -37,7 +40,6 @@
 
 #define LCD_PIXEL_WIDTH 6
 #define LCD_PIXEL_HEIGHT 8
-#define LCD_DEFAULT_CONTRAST 15
 #define LCD_DEFAULT_BIAS 0x17
 
 #ifndef WIFI_DELAY_MS
@@ -73,9 +75,6 @@
 
 #define WAIT_BEFORE_HTTP_MS 100
 
-//extern "C" {
-//#include "user_interface.h"
-//}
 
 #define HTTP_TIMEOUT_MS 8000
 
@@ -88,7 +87,6 @@
   "\n  reset             : reset the device"                                                                                               \
   "\n  deepsleep ...     : deep sleep N provided seconds"                                                                                  \
   "\n  lightsleep ...    : light sleep N provided seconds"                                                                                 \
-  "\n  clearstack        : clear stack trace "                                                                                             \
   "\n"
 
 HTTPClient httpClient;
@@ -97,6 +95,7 @@ Adafruit_PCD8544* lcd = NULL;
 Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
 Buffer *deepSleepMode = NULL;
+Buffer *contrast = NULL;
 int currentLogLine = 0;
 Buffer *logBuffer = NULL;
 Buffer *cmdBuffer = NULL;
@@ -115,6 +114,7 @@ void handleInterrupt();
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate);
 void dumpLogBuffer();
 bool inDeepSleepMode();
+int lcdContrast();
 
 ////////////////////////////////////////
 // Functions requested for architecture
@@ -197,7 +197,7 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
 
 
   if (skipIfConnected) { // check if connected
-    log(CLASS_MAIN, Info, "Conn. '%s'?", ssid);
+    log(CLASS_MAIN, Debug, "Already connected?");
     status = WiFi.status();
     if (status == WL_CONNECTED) {
       log(CLASS_MAIN, Info, "IP: %s", WiFi.localIP().toString().c_str());
@@ -324,12 +324,10 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
 }
 
 void clearDevice() {
-  //SPIFFS.format();
   logUser("   rm %s", DEVICE_ALIAS_FILENAME);
   logUser("   rm %s", DEVICE_PWD_FILENAME);
   logUser("   ls");
   logUser("   <remove all .properties>");
-  //SaveCrash.clear();
 }
 
 bool readFile(const char *fname, Buffer *content) {
@@ -449,7 +447,7 @@ BotMode setupArchitecture() {
 
   log(CLASS_MAIN, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
-  lcd->begin(LCD_DEFAULT_CONTRAST, LCD_DEFAULT_BIAS);
+  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
   lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
@@ -457,8 +455,6 @@ BotMode setupArchitecture() {
 
   heartbeat();
 
-  //log(CLASS_MAIN, Debug, "Setup wdt");
-  //ESP.wdtEnable(1); // argument not used
 
   log(CLASS_MAIN, Debug, "Setup wifi");
   WiFi.persistent(false);
@@ -519,7 +515,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     logUser("   save %s <pwd>", DEVICE_PWD_FILENAME);
     logRawUser("   wifissid <ssid>");
     logRawUser("   wifipass <password>");
-    logRawUser("   lcdcont <contrast-0-100>");
+    logUser("   save %s <contrast-0-100>", DEVICE_CONTRAST_FILENAME);
     logRawUser("   (setup of power consumption settings architecture specific if any)");
     logRawUser("   store");
     logRawUser("   ls");
@@ -553,9 +549,6 @@ CmdExecStatus commandArchitecture(const char *c) {
   } else if (strcmp("lightsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
     return (lightSleepInterruptable(now(), s)? ExecutedInterrupt: Executed);
-  } else if (strcmp("clearstack", c) == 0) {
-    //SaveCrash.clear();
-    return Executed;
   } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
     logRawUser(HELP_COMMAND_ARCH_CLI);
     return Executed;
@@ -749,4 +742,9 @@ void dumpLogBuffer() {
 bool inDeepSleepMode() {
   return (bool)atoi(initializeTuningVariable(&deepSleepMode, DEVICE_DSLEEP_FILENAME, DEVICE_DSLEEP_MAX_LENGTH, "0", false)->getBuffer());
 }
+
+int lcdContrast() {
+  return atoi(initializeTuningVariable(&contrast, DEVICE_CONTRAST_FILENAME, DEVICE_CONTRAST_MAX_LENGTH, "50", false)->getBuffer());
+}
+
 
