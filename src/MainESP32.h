@@ -37,7 +37,7 @@
 
 #define LCD_PIXEL_WIDTH 6
 #define LCD_PIXEL_HEIGHT 8
-#define LCD_DEFAULT_CONTRAST 50
+#define LCD_DEFAULT_CONTRAST 15
 #define LCD_DEFAULT_BIAS 0x17
 
 #ifndef WIFI_DELAY_MS
@@ -94,7 +94,6 @@
 HTTPClient httpClient;
 RemoteDebug telnet;
 Adafruit_PCD8544* lcd = NULL;
-int lcdContrast = -1;
 Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
 Buffer *deepSleepMode = NULL;
@@ -116,7 +115,6 @@ void handleInterrupt();
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate);
 void dumpLogBuffer();
 bool inDeepSleepMode();
-void updateLcdContrast();
 
 ////////////////////////////////////////
 // Functions requested for architecture
@@ -315,7 +313,6 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
     case NoClear:
       break;
   }
-  updateLcdContrast();
   lcd->setTextWrap(wrap);
   lcd->setTextSize(size);
   lcd->setTextColor(color);
@@ -454,7 +451,6 @@ BotMode setupArchitecture() {
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   lcd->begin(LCD_DEFAULT_CONTRAST, LCD_DEFAULT_BIAS);
   lcd->clearDisplay();
-  lcdContrast = LCD_DEFAULT_CONTRAST;
   delay(DELAY_MS_SPI);
 
   messageFunc(0, 0, 1, false, FullClear, 1, "booting...");
@@ -545,8 +541,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     const char *c = strtok(NULL, " ");
     int i = atoi(c);
     logUser("Set contrast to: %d", i);
-    m->getSleepinoSettings()->setLcdContrast(i);
-    updateLcdContrast();
+    lcd->setContrast(i);
     return Executed;
   } else if (strcmp("reset", c) == 0) {
     ESP.restart(); // it is normal that it fails if invoked the first time after firmware is written
@@ -755,11 +750,3 @@ bool inDeepSleepMode() {
   return (bool)atoi(initializeTuningVariable(&deepSleepMode, DEVICE_DSLEEP_FILENAME, DEVICE_DSLEEP_MAX_LENGTH, "0", false)->getBuffer());
 }
 
-void updateLcdContrast() {
-	int tgt = m->getSleepinoSettings()->getLcdContrast();
-	if (lcdContrast != tgt) {
-		lcd->setContrast(tgt);
-    lcdContrast = tgt;
-    log(CLASS_MAIN, Debug, "Changed: new contrast %d", tgt);
-	}
-}

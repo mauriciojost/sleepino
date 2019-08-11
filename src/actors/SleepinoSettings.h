@@ -10,7 +10,6 @@
 #define CLASS_SLEEPINO_SETTINGS "SS"
 #define SKIP_UPDATES_CODE "skip"
 #define UPDATE_COMMAND "update %s"
-#define DETAULT_LCD_CONTRAST 50
 
 enum SleepinoSettingsProps {
   SleepinoSettingsLcdLogsProp = 0,   // boolean, define if the device display logs in LCD
@@ -19,7 +18,6 @@ enum SleepinoSettingsProps {
   SleepinoSettingsUpdateTargetProp,  // string, target version of firmware to update to
   SleepinoSettingsWifiSsidBackupProp,// string, ssid for backup wifi network
   SleepinoSettingsWifiPassBackupProp,// string, pass for backup wifi network
-  SleepinoSettingsLcdContrastProp,   // integer, contrast of the LCD (from 0 to 100)
   SleepinoSettingsPropsDelimiter
 };
 
@@ -33,7 +31,6 @@ private:
   Buffer *target;
   Buffer *ssidb;
   Buffer *passb;
-  int contrast;
   Metadata *md;
   void (*command)(const char*);
 
@@ -49,7 +46,6 @@ public:
     ssidb->load("defaultssid");
     passb = new Buffer(20);
     passb->load("defaultssid");
-    contrast = DETAULT_LCD_CONTRAST;
     md = new Metadata(n);
     md->getTiming()->setFreq("~24h");
     command = NULL;
@@ -94,8 +90,6 @@ public:
         return SENSITIVE_PROP_PREFIX "ssidb";
       case (SleepinoSettingsWifiPassBackupProp):
         return SENSITIVE_PROP_PREFIX "passb";
-      case (SleepinoSettingsLcdContrastProp):
-        return ADVANCED_PROP_PREFIX "contrast";
       default:
         return "";
     }
@@ -120,9 +114,6 @@ public:
         break;
       case (SleepinoSettingsWifiPassBackupProp):
         setPropValue(m, targetValue, actualValue, passb);
-        break;
-      case (SleepinoSettingsLcdContrastProp):
-        setPropInteger(m, targetValue, actualValue, &contrast);
         break;
       default:
         break;
@@ -155,15 +146,6 @@ public:
   Buffer *getBackupWifiPass() {
     return passb;
   }
-
-  int getLcdContrast() {
-    return contrast;
-  }
-
-  void setLcdContrast(int c) {
-    contrast = c;
-  }
-
 };
 
 #endif // MODULE_SETTINGS_INC
