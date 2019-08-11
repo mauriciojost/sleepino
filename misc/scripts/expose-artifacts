@@ -9,11 +9,30 @@ groups
 pwd
 ls
 
+ls exports
+
 export EXPO=/var/lib/main4ino/httpexposed/sleepino
 
-find . -name 'firmware-*.bin' | xargs -I% mv -f % $EXPO
+function export_firmware_for_platform() {
+  local platform=$1
 
-# Rules
-cd $EXPO
-ls -t | grep firmware | head -1 | xargs -I% ln -sf % latest
-ls -t | grep firmware | grep -v SNAPSHOT | head -1 | xargs -I% ln -sf % latest-stable
+  echo "Exporting files for $platform..."
+
+  find . -name 'firmware-*.'$platform'.bin' > files.list
+
+  for f in `cat files.list`
+  do
+    echo "Moving $f..."
+    mv -f $f $EXPO
+  done
+
+  # Rules
+  cd $EXPO
+  ls -t | grep firmware | grep $platform | head -1 | xargs -I% ln -sf % $platform.latest.bin
+  ls -t | grep firmware | grep $platform | grep -v SNAPSHOT | head -1 | xargs -I% ln -sf % $platform.latest-stable.bin
+  cd -
+
+}
+
+export_firmware_for_platform esp8266
+export_firmware_for_platform esp32

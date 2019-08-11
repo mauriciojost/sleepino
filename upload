@@ -3,10 +3,11 @@
 set -e
 set -x
 
-while getopts p:fms:vyebo: option
+while getopts n:p:fms:vyebo: option
 do
   case "${option}"
   in
+    n) PIO_ENVIRONMENT=${OPTARG};;
     p) PROFILE=${OPTARG};;
     f) UPLOAD_FIRMWARE=true;;
     m) MONITOR=true;;
@@ -23,7 +24,7 @@ VERSION=`cat library.json | python -c 'import sys, json; print json.load(sys.std
 COMMIT_ID="`git rev-parse --short HEAD`"
 PROJ_VERSION_ID="$VERSION-$COMMIT_ID" 
 LOG_SUBDIR=images
-EXPORT_SUBDIR=exports
+EXPORT_SUBDIR=exports/$PIO_ENVIRONMENT/
 
 if [ -z "$PROFILE" ]
 then
@@ -38,7 +39,7 @@ export PLATFORMIO_BUILD_FLAGS="-D PROJ_VERSION=$PROJ_VERSION_ID `cat $PROFILE | 
 if [ -z "$UPLOAD_FIRMWARE" ]
 then
   echo "### Compiling..."
-  platformio run $PLATFORMIO_RUN_PARAMS
+  platformio run -e $PIO_ENVIRONMENT $PLATFORMIO_RUN_PARAMS
 fi
 
 if [ -n "$EXPORT_FIRMWARE_FILE" ]
@@ -46,7 +47,7 @@ then
   echo "### Exporting firmware file..."
   rm -fr $EXPORT_SUBDIR/
   mkdir -p $EXPORT_SUBDIR/
-  cp .pioenvs/main/firmware.bin $EXPORT_SUBDIR/firmware-$PROJ_VERSION_ID.bin
+  cp .pioenvs/$PIO_ENVIRONMENT/firmware.bin $EXPORT_SUBDIR/firmware-$PROJ_VERSION_ID.$PIO_ENVIRONMENT.bin
 fi
 
 if [ -n "$UPLOAD_FIRMWARE" ]
@@ -65,7 +66,7 @@ then
   fi
 
   echo "### Uploading..."
-  platformio run --target upload $UPLOAD_COMMAND_SUFFIX
+  platformio run -e $PIO_ENVIRONMENT --target upload $UPLOAD_COMMAND_SUFFIX
 
   if [ -n "$BACKUP_IMAGE" ]
   then
@@ -84,8 +85,8 @@ then
   rm -fr data
   ln -s `readlink -e $TUNING_PATH` data
   echo "### Uploading $TUNING_PATH"
-  platformio run --target buildfs
-  platformio run --target uploadfs
+  platformio run -e $PIO_ENVIRONMENT --target buildfs
+  platformio run -e $PIO_ENVIRONMENT --target uploadfs
 fi
 
 

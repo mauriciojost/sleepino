@@ -3,10 +3,10 @@
 #include <Adafruit_PCD8544.h>  // include adafruit PCD8544 (Nokia 5110) library
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <ESP8266HTTPClient.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266httpUpdate.h>
-#include <EspSaveCrash.h>
+#include <HTTPClient.h>
+#include <SPIFFS.h>
+#include <HTTPUpdate.h>
+//#include <EspSaveCrash.h> // not supported for ESP32
 #include <FS.h>
 #include <Main.h>
 #include <Pinout.h>
@@ -14,7 +14,8 @@
 #include <SPI.h>
 #include <Wire.h>
 
-#define DELAY_MS_SPI 1
+#define FORMAT_SPIFFS_IF_FAILED true
+#define DELAY_MS_SPI 3
 #define ABORT_DELAY_SECS 5
 #define HW_STARTUP_DELAY_MSECS 10
 
@@ -46,12 +47,10 @@
 #define MAX_ROUND_ROBIN_LOG_FILES 5
 
 #ifndef FIRMWARE_UPDATE_URL
-#define FIRMWARE_UPDATE_URL MAIN4INOSERVER_API_HOST_BASE "/firmwares/sleepino/%s.esp8266.bin"
+#define FIRMWARE_UPDATE_URL MAIN4INOSERVER_API_HOST_BASE "/firmwares/sleepino/%s.esp32.bin"
 #endif // FIRMWARE_UPDATE_URL
 
 #define PRE_DEEP_SLEEP_WINDOW_SECS 5
-
-#define SERVO_PERIOD_REACTION_MS 15
 
 #define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 2)
 
@@ -65,29 +64,28 @@
 #define USER_DELAY_MS 2000
 #endif // USER_DELAY_MS
 
-#define VCC_FLOAT ((float)ESP.getVcc() / 1024)
+#define USER_LCD_FONT_SIZE 2
+
+//#define VCC_FLOAT ((float)ESP.getVcc() / 1024)
 
 #define ONLY_SHOW_MSG true
 #define SHOW_MSG_AND_REACT false
 
 #define WAIT_BEFORE_HTTP_MS 100
 
-#define FPM_SLEEP_MAX_TIME 0xFFFFFFF
-
-extern "C" {
-#include "user_interface.h"
-}
+//extern "C" {
+//#include "user_interface.h"
+//}
 
 #define HTTP_TIMEOUT_MS 8000
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
-  "\n  ESP8266 HELP"                                                                                                                       \
+  "\n  ESP32 HELP"                                                                                                                        \
   "\n  init              : initialize essential settings (wifi connection, logins, etc.)"                                                  \
   "\n  rm ...            : remove file in FS "                                                                                             \
   "\n  lcdcont ...       : change lcd contrast"                                                                                            \
   "\n  ls                : list files present in FS "                                                                                      \
   "\n  reset             : reset the device"                                                                                               \
-  "\n  freq ...          : set clock frequency in MHz (80 or 160 available only, 160 faster but more power consumption)"                   \
   "\n  deepsleep ...     : deep sleep N provided seconds"                                                                                  \
   "\n  lightsleep ...    : light sleep N provided seconds"                                                                                 \
   "\n  clearstack        : clear stack trace "                                                                                             \
@@ -104,7 +102,7 @@ Buffer *logBuffer = NULL;
 Buffer *cmdBuffer = NULL;
 Buffer *cmdLast = NULL;
 
-ADC_MODE(ADC_VCC);
+
 
 void bitmapToLcd(uint8_t bitmap[]);
 void reactCommandCustom();
@@ -167,10 +165,8 @@ void logLine(const char *str) {
 
 void stopWifi() {
   if (!inDeepSleepMode()) {
-    log(CLASS_MAIN, Debug, "Wifi off...");
-    wifi_station_disconnect();
-    wifi_set_opmode(NULL_MODE);
-    wifi_set_sleep_type(MODEM_SLEEP_T);
+  WiFi.disconnect();
+  // TODO see if power reduction can be applied
   } else {
     log(CLASS_MAIN, Debug, "Skip wifi off...");
   }
@@ -199,26 +195,16 @@ bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retr
 
   log(CLASS_MAIN, Info, "Init wifi '%s' (or '%s')...", ssid, ssidb);
 
-  bool wifiIsOff = (wifi_get_opmode() == NULL_MODE);
-  if (wifiIsOff) {
-    log(CLASS_MAIN, Debug, "Wifi off, turning on...");
-    wifi_fpm_do_wakeup();
-    wifi_fpm_close();
-    wifi_set_opmode(STATION_MODE);
-    wifi_station_connect();
-  } else {
-    log(CLASS_MAIN, Debug, "Wifi on already");
-  }
 
   if (skipIfConnected) { // check if connected
-    log(CLASS_MAIN, Debug, "Already connected?");
+    log(CLASS_MAIN, Info, "Conn. '%s'?", ssid);
     status = WiFi.status();
     if (status == WL_CONNECTED) {
-      log(CLASS_MAIN, Debug, "Already connected! %s", WiFi.localIP().toString().c_str());
+      log(CLASS_MAIN, Info, "IP: %s", WiFi.localIP().toString().c_str());
       return true; // connected
     }
   } else {
-    stopWifi(); 
+  	stopWifi();
   }
 
   log(CLASS_MAIN, Debug, "Scanning...");
@@ -343,12 +329,11 @@ void clearDevice() {
   logUser("   rm %s", DEVICE_PWD_FILENAME);
   logUser("   ls");
   logUser("   <remove all .properties>");
-  SaveCrash.clear();
+  //SaveCrash.clear();
 }
 
 bool readFile(const char *fname, Buffer *content) {
   bool success = false;
-  SPIFFS.begin();
   File f = SPIFFS.open(fname, "r");
   if (!f) {
     log(CLASS_MAIN, Warn, "File reading failed: %s", fname);
@@ -360,23 +345,21 @@ bool readFile(const char *fname, Buffer *content) {
     log(CLASS_MAIN, Debug, "File read: %s", fname);
     success = true;
   }
-  SPIFFS.end();
   return success;
 }
 
 bool writeFile(const char *fname, const char *content) {
   bool success = false;
-  SPIFFS.begin();
   File f = SPIFFS.open(fname, "w+");
   if (!f) {
     log(CLASS_MAIN, Warn, "File writing failed: %s", fname);
     success = false;
   } else {
-    f.write((const uint8_t *)content, strlen(content));
+    f.print(content);
+    f.close();
     log(CLASS_MAIN, Debug, "File written: %s", fname);
     success = true;
   }
-  SPIFFS.end();
   return success;
 }
 
@@ -384,8 +367,8 @@ void infoArchitecture() {}
 
 void testArchitecture() {}
 
-void updateFirmware(const char *descriptor) {
-  ESP8266HTTPUpdate updater;
+void updateFirmware(const char* descriptor) {
+  HTTPUpdate updater;
   Buffer url(64);
   url.fill(FIRMWARE_UPDATE_URL, descriptor);
 
@@ -398,14 +381,14 @@ void updateFirmware(const char *descriptor) {
 
   log(CLASS_MAIN, Info, "Updating firmware from '%s'...", url.getBuffer());
 
-  t_httpUpdate_return ret = updater.update(url.getBuffer(), STRINGIFY(PROJ_VERSION));
+  t_httpUpdate_return ret = updater.update(httpClient.getStream(), url.getBuffer(), STRINGIFY(PROJ_VERSION));
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       log(CLASS_MAIN,
           Error,
           "HTTP_UPDATE_FAILD Error (%d): %s\n",
-          ESPhttpUpdate.getLastError(),
-          ESPhttpUpdate.getLastErrorString().c_str());
+          updater.getLastError(),
+          updater.getLastErrorString().c_str());
       break;
     case HTTP_UPDATE_NO_UPDATES:
       log(CLASS_MAIN, Debug, "No updates.");
@@ -459,6 +442,9 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup timing");
   setExternalMillis(millis);
 
+  log(CLASS_MAIN, Debug, "Setup SPIFFS");
+  SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
+
   log(CLASS_MAIN, Debug, "Setup pins & deepsleep (if failure think of activating deep sleep mode?)");
 
   log(CLASS_MAIN, Debug, "Setup LCD");
@@ -471,13 +457,11 @@ BotMode setupArchitecture() {
 
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup wdt");
-  ESP.wdtEnable(1); // argument not used
-
+  //log(CLASS_MAIN, Debug, "Setup wdt");
+  //ESP.wdtEnable(1); // argument not used
   log(CLASS_MAIN, Debug, "Setup wifi");
   WiFi.persistent(false);
-  WiFi.hostname(apiDeviceLogin());
-  stopWifi();
+  WiFi.setHostname(apiDeviceLogin());
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup http");
@@ -494,6 +478,7 @@ BotMode setupArchitecture() {
   telnet.setHelpProjectsCmds(helpCli);
   heartbeat();
 
+  /*
   log(CLASS_MAIN, Debug, "Clean up crashes");
   if (SaveCrash.count() > 5) {
     log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
@@ -502,6 +487,7 @@ BotMode setupArchitecture() {
     log(CLASS_MAIN, Warn, "Stack-trcs (!!!)");
     SaveCrash.print();
   }
+  */
 
   log(CLASS_MAIN, Debug, "Letting user interrupt...");
   bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
@@ -522,7 +508,7 @@ void runModeArchitecture() {
 
   Buffer lcdAux(64);
 
-  lcdAux.fill("%s\nVcc: %0.4f\nV:%s", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION));
+  lcdAux.fill("%s\nV:%s", timeAux.getBuffer(), STRINGIFY(PROJ_VERSION));
 
   messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
@@ -548,33 +534,20 @@ CmdExecStatus commandArchitecture(const char *c) {
     logRawUser("   ls");
     return Executed;
   } else if (strcmp("ls", c) == 0) {
-    SPIFFS.begin();
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-      logUser("- %s (%d bytes)", dir.fileName().c_str(), (int)dir.fileSize());
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+    while(file) {
+      logUser("- %s (%d bytes)", file.name(), (int)file.size());
+      file = root.openNextFile();
     }
-    SPIFFS.end();
     return Executed;
   } else if (strcmp("rm", c) == 0) {
     const char *f = strtok(NULL, " ");
-    SPIFFS.begin();
     bool succ = SPIFFS.remove(f);
-    logUser("### File '%s' %s removed", f, (succ ? "" : "NOT"));
-    SPIFFS.end();
-    return Executed;
-  } else if (strcmp("lcdcont", c) == 0) {
-    const char *c = strtok(NULL, " ");
-    int i = atoi(c);
-    logUser("Set contrast to: %d", i);
-    lcd->setContrast(i);
+    logUser("### File '%s' %s removed", f, (succ?"":"NOT"));
     return Executed;
   } else if (strcmp("reset", c) == 0) {
     ESP.restart(); // it is normal that it fails if invoked the first time after firmware is written
-    return Executed;
-  } else if (strcmp("freq", c) == 0) {
-    uint8 fmhz = (uint8)atoi(strtok(NULL, " "));
-    bool succ = system_update_cpu_freq(fmhz);
-    logUser("Freq updated: %dMHz (succ %s)", (int)fmhz, BOOL(succ));
     return Executed;
   } else if (strcmp("deepsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
@@ -582,9 +555,9 @@ CmdExecStatus commandArchitecture(const char *c) {
     return Executed;
   } else if (strcmp("lightsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
-    return (lightSleepInterruptable(now(), s) ? ExecutedInterrupt : Executed);
+    return (lightSleepInterruptable(now(), s)? ExecutedInterrupt: Executed);
   } else if (strcmp("clearstack", c) == 0) {
-    SaveCrash.clear();
+    //SaveCrash.clear();
     return Executed;
   } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
     logRawUser(HELP_COMMAND_ARCH_CLI);
@@ -634,7 +607,7 @@ void debugHandle() {
     firstTime = false;
   }
 
-  m->getSleepinoSettings()->getStatus()->fill("vcc:%0.4f,heap:%d", VCC_FLOAT, ESP.getFreeHeap());
+  m->getSleepinoSettings()->getStatus()->fill("heap:%d", ESP.getFreeHeap());
   m->getSleepinoSettings()->getMetadata()->changed();
 
   if (m->getSleepinoSettings()->fsLogsEnabled()) {
@@ -687,7 +660,7 @@ void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs) {
   time_t leftSecs = p - spentSecs;
   if (leftSecs > 0) {
     //lcd->command(PCD8544_FUNCTIONSET | PCD8544_POWERDOWN);
-    ESP.deepSleep(leftSecs * 1000000L, WAKE_RF_DEFAULT);
+    ESP.deepSleep(leftSecs * 1000000L);
   }
 }
 
@@ -740,9 +713,9 @@ bool haveToInterrupt() {
 }
 
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
-  bool first = false;
+	bool first = false;
   if (*var == NULL) {
-    first = true;
+  	first = true;
     *var = new Buffer(maxLength);
     bool succAlias = readFile(filename, *var); // preserve the alias
     if (succAlias) {                           // managed to retrieve the alias

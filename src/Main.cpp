@@ -11,8 +11,16 @@
 
 ModuleSleepino *m;
 
-#ifdef ARDUINO // on ESP8266
+#ifdef ARDUINO
+
+#ifdef ESP8266 // on ESP8266
 #include <MainESP8266.h>
+#endif // ESP8266
+
+#ifdef ESP32 // on ESP32
+#include <MainESP32.h>
+#endif // ESP32
+
 #else // on PC
 #include <MainX86_64.h>
 #endif // ARDUINO

@@ -30,7 +30,8 @@ pipeline {
         stage('Artifact') {
           steps {
             wrap([$class: 'AnsiColorBuildWrapper', 'colorMapName': 'xterm']) {
-              sh './upload -p profiles/generic.prof -e' // shared volume with docker container
+              sh './upload -n esp8266 -p profiles/generic.prof -e' // shared volume with docker container
+              sh './upload -n esp32 -p profiles/generic.prof -e' // shared volume with docker container
             }
           }
         }
