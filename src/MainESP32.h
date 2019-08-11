@@ -523,6 +523,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     logUser("   save %s <pwd>", DEVICE_PWD_FILENAME);
     logRawUser("   wifissid <ssid>");
     logRawUser("   wifipass <password>");
+    logRawUser("   lcdcont <contrast-0-100>");
     logRawUser("   (setup of power consumption settings architecture specific if any)");
     logRawUser("   store");
     logRawUser("   ls");
