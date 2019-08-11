@@ -101,6 +101,7 @@ int currentLogLine = 0;
 Buffer *logBuffer = NULL;
 Buffer *cmdBuffer = NULL;
 Buffer *cmdLast = NULL;
+EspSaveCrash espSaveCrash;
 
 ADC_MODE(ADC_VCC);
 
@@ -341,7 +342,7 @@ void clearDevice() {
   logUser("   rm %s", DEVICE_PWD_FILENAME);
   logUser("   ls");
   logUser("   <remove all .properties>");
-  SaveCrash.clear();
+  espSaveCrash.clear();
 }
 
 bool readFile(const char *fname, Buffer *content) {
@@ -493,12 +494,12 @@ BotMode setupArchitecture() {
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Clean up crashes");
-  if (SaveCrash.count() > 5) {
+  if (espSaveCrash.count() > 5) {
     log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
-    SaveCrash.clear();
-  } else if (SaveCrash.count() > 0) {
+    espSaveCrash.clear();
+  } else if (espSaveCrash.count() > 0) {
     log(CLASS_MAIN, Warn, "Stack-trcs (!!!)");
-    SaveCrash.print();
+    espSaveCrash.print();
   }
 
   log(CLASS_MAIN, Debug, "Letting user interrupt...");
@@ -582,7 +583,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     int s = atoi(strtok(NULL, " "));
     return (lightSleepInterruptable(now(), s) ? ExecutedInterrupt : Executed);
   } else if (strcmp("clearstack", c) == 0) {
-    SaveCrash.clear();
+    espSaveCrash.clear();
     return Executed;
   } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
     logRawUser(HELP_COMMAND_ARCH_CLI);
