@@ -349,21 +349,27 @@ void clearDevice() {
 
 bool readFile(const char *fname, Buffer *content) {
   bool success = false;
-  SPIFFS.begin();
-  File f = SPIFFS.open(fname, "r");
-  if (!f) {
-    log(CLASS_MAIN, Warn, "File reading failed: %s", fname);
+  bool exists = SPIFFS.exists(fname);
+  if (!exists) {
+    log(CLASS_MAIN, Warn, "File does not exist: %s", fname);
     content->clear();
     success = false;
   } else {
-    String s = f.readString();
-    content->load(s.c_str());
-    log(CLASS_MAIN, Debug, "File read: %s", fname);
-    success = true;
+    File f = SPIFFS.open(fname, "r");
+    if (!f) {
+      log(CLASS_MAIN, Warn, "File reading failed: %s", fname);
+      content->clear();
+      success = false;
+    } else {
+      String s = f.readString();
+      content->load(s.c_str());
+      log(CLASS_MAIN, Debug, "File read: %s", fname);
+      success = true;
+    }
   }
-  SPIFFS.end();
   return success;
 }
+
 
 bool writeFile(const char *fname, const char *content) {
   bool success = false;
