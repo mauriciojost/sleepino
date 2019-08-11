@@ -546,6 +546,12 @@ CmdExecStatus commandArchitecture(const char *c) {
     bool succ = SPIFFS.remove(f);
     logUser("### File '%s' %s removed", f, (succ?"":"NOT"));
     return Executed;
+  } else if (strcmp("lcdcont", c) == 0) {
+    const char *c = strtok(NULL, " ");
+    int i = atoi(c);
+    logUser("Set contrast to: %d", i);
+    lcd->setContrast(i);
+    return Executed;
   } else if (strcmp("reset", c) == 0) {
     ESP.restart(); // it is normal that it fails if invoked the first time after firmware is written
     return Executed;
