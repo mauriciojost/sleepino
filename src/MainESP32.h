@@ -52,6 +52,8 @@
 #define FIRMWARE_UPDATE_URL MAIN4INOSERVER_API_HOST_BASE "/firmwares/sleepino/%s.esp32.bin"
 #endif // FIRMWARE_UPDATE_URL
 
+#define FIRMWARE_UPDATE_URL_MAX_LENGTH 128
+
 #define PRE_DEEP_SLEEP_WINDOW_SECS 5
 
 #define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 2)
@@ -373,7 +375,7 @@ void testArchitecture() {}
 
 void updateFirmware(const char* descriptor) {
   HTTPUpdate updater;
-  Buffer url(64);
+  Buffer url(FIRMWARE_UPDATE_URL_MAX_LENGTH);
   url.fill(FIRMWARE_UPDATE_URL, descriptor);
 
   Settings *s = m->getModuleSettings();
@@ -383,7 +385,9 @@ void updateFirmware(const char* descriptor) {
     return; // fail fast
   }
 
-  log(CLASS_MAIN, Info, "Updating firmware from '%s'...", url.getBuffer());
+
+  log(CLASS_MAIN, Warn, "Current firmware '%s'", STRINGIFY(PROJ_VERSION));
+  log(CLASS_MAIN, Warn, "Updating firmware from '%s'...", url.getBuffer());
 
   t_httpUpdate_return ret = updater.update(httpClient.getStream(), url.getBuffer(), STRINGIFY(PROJ_VERSION));
   switch (ret) {
@@ -676,7 +680,9 @@ void handleInterrupt() {
       } else if (c == 0x1b && n == 1) { // up/down
         log(CLASS_MAIN, Debug, "Up/down");
         cmdBuffer->load(cmdLast);
-      } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
+      } else if ((c == '\r') && n == 1) { // ignore
+        log(CLASS_MAIN, Debug, "\\r pressed (ignored)");
+      } else if (c == '\n' && n == 1) { // if enter is pressed...
         log(CLASS_MAIN, Debug, "Enter");
         if (cmdBuffer->getLength() > 0) {
           CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
