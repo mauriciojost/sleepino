@@ -81,7 +81,7 @@
 #define HTTP_TIMEOUT_MS 8000
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
-  "\n  ESP32 HELP"                                                                                                                        \
+  "\n  ESP32 HELP"                                                                                                                         \
   "\n  init              : initialize essential settings (wifi connection, logins, etc.)"                                                  \
   "\n  rm ...            : remove file in FS "                                                                                             \
   "\n  lcdcont ...       : change lcd contrast"                                                                                            \
