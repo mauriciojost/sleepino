@@ -10,6 +10,12 @@
 #define PROJ_VERSION "snapshot"
 #endif // PROJ_VERSION
 
+enum WifiNetwork {
+  WifiNoNetwork = 0,
+  WifiMainNetwork,
+  WifiBackupNetwork
+};
+
 //////////////////////////////////////////////////////////////
 // Provided by generic Main
 //////////////////////////////////////////////////////////////

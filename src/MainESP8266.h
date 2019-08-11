@@ -74,12 +74,6 @@
 
 #define FPM_SLEEP_MAX_TIME 0xFFFFFFF
 
-enum WifiNetwork {
-  WifiNoNetwork = 0,
-  WifiMainNetwork,
-  WifiBackupNetwork
-};
-
 extern "C" {
 #include "user_interface.h"
 }
