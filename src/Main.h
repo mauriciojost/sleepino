@@ -112,4 +112,35 @@ void configureModeArchitecture();
 // Abort execution (non-recoverable-error)
 void abort(const char *msg);
 
+// Generic functions common to all architectures
+///////////////////
+
+Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
+	bool first = false;
+  if (*var == NULL) {
+  	first = true;
+    *var = new Buffer(maxLength);
+    bool succValue = readFile(filename, *var); // read value from file
+    if (succValue) {                           // managed to retrieve the value
+      log(CLASS_MAIN, Debug, "Read %s: OK", filename);
+      (*var)->replace('\n', 0);                // minor formatting
+    } else if (defaultContent != NULL) {       // failed to retrieve value, use default content if provided
+      log(CLASS_MAIN, Debug, "Read %s: KO", filename);
+      log(CLASS_MAIN, Debug, "Using default: %s", defaultContent);
+      (*var)->fill(defaultContent);
+    } else {
+      abort(filename);
+    }
+  }
+  if (first) {
+    if (obfuscate) {
+      log(CLASS_MAIN, Debug, "Tuning: %s=***", filename);
+    } else {
+      log(CLASS_MAIN, Debug, "Tuning: %s=%s", filename, (*var)->getBuffer());
+    }
+  }
+  return *var;
+}
+
+
 #endif // MAIN_INC
