@@ -1,5 +1,5 @@
-#ifndef MODULE_BOTINO_INC
-#define MODULE_BOTINO_INC
+#ifndef MODULE_SLEEPINO_INC
+#define MODULE_SLEEPINO_INC
 
 #include <Pinout.h>
 #include <log4ino/Log.h>
@@ -13,7 +13,7 @@
 #define COMMAND_MAX_LENGTH 128
 
 #define HELP_COMMAND_CLI_PROJECT                                                                                                           \
-  "\n  BOTINO HELP"                                                                                                                        \
+  "\n  SLEEPINO HELP"                                                                                                                        \
   "\n  move ...        : execute a move (example: 'move A00C55')"                                                                          \
   "\n  lcd ...         : write on display <x> <y> <color> <wrap> <clear> <size> <str>"                                                     \
   "\n  help            : show this help"                                                                                                   \
@@ -188,4 +188,4 @@ public:
   }
 };
 
-#endif // MODULE_BOTINO_INC
+#endif // MODULE_SLEEPINO_INC
