@@ -51,8 +51,6 @@
 
 #define PRE_DEEP_SLEEP_WINDOW_SECS 5
 
-#define SERVO_PERIOD_REACTION_MS 15
-
 #define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 2)
 
 #define LOG_BUFFER_MAX_LENGTH 1024
