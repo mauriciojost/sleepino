@@ -80,6 +80,16 @@
 
 #define HTTP_TIMEOUT_MS 8000
 
+// The module aims at waking up every X amount of deep slept seconds.
+// Imagine that we aim at waking up every hour.
+// A deep sleep of 3600 seconds could result in 3550 seconds (HW RTC not perfectly tuned).
+// If the processing finishes in 1 second, we will be ready in second 3551, so next wakeup will
+// be in 9 seconds, resulting in 2 wake-ups instead of 1 wake-up.
+// To prevent that from happening we add a tunable fixed supplement.
+#ifndef DEEP_SLEEP_SUPPLEMENT_SECS
+#define DEEP_SLEEP_SUPPLEMENT_SECS 60
+#endif // DEEP_SLEEP_SUPPLEMENT_SECS
+
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
   "\n  ESP32 HELP"                                                                                                                         \
   "\n  init              : initialize essential settings (wifi connection, logins, etc.)"                                                  \
@@ -424,7 +434,7 @@ void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
 
   if (!inte) {
   	// if no intervention, deep sleep
-    deepSleepNotInterruptableSecs(n, toSleepSecs);
+    deepSleepNotInterruptableSecs(n, toSleepSecs + DEEP_SLEEP_SUPPLEMENT_SECS);
   }
 }
 
