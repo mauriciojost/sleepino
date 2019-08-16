@@ -351,6 +351,7 @@ void clearDevice() {
 
 bool readFile(const char *fname, Buffer *content) {
   bool success = false;
+  SPIFFS.begin();
   bool exists = SPIFFS.exists(fname);
   if (!exists) {
     log(CLASS_MAIN, Warn, "File does not exist: %s", fname);
@@ -369,6 +370,7 @@ bool readFile(const char *fname, Buffer *content) {
       success = true;
     }
   }
+  SPIFFS.end();
   return success;
 }
 
