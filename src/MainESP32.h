@@ -689,7 +689,7 @@ void handleInterrupt() {
         }
       } else if (c == 0x1b && n == 1) { // up/down
         log(CLASS_MAIN, Debug, "Up/down");
-        cmdBuffer->load(cmdLast);
+        cmdBuffer->load(cmdLast->getBuffer());
       } else if ((c == '\r') && n == 1) { // ignore
         log(CLASS_MAIN, Debug, "\\r pressed (ignored)");
       } else if (c == '\n' && n == 1) { // if enter is pressed...
@@ -700,7 +700,7 @@ void handleInterrupt() {
           log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
           log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
           logUser("('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
-          cmdLast->load(cmdBuffer);
+          cmdLast->load(cmdBuffer->getBuffer());
           cmdBuffer->clear();
         }
         break;
