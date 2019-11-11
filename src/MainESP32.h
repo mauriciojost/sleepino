@@ -78,7 +78,7 @@
 #define WAIT_BEFORE_HTTP_MS 100
 
 
-#define HTTP_TIMEOUT_MS 8000
+#define HTTP_TIMEOUT_MS 60000
 
 // The module aims at waking up every X amount of deep slept seconds.
 // Imagine that we aim at waking up every hour.
