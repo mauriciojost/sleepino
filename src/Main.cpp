@@ -67,8 +67,8 @@ void setup() {
   log(CLASS_MAIN, Info, "Setup done.");
   log(CLASS_MAIN, Info, "Loop started...");
   if (m->getBot()->getMode() == ConfigureMode) {
-    logRawUser("Configure mode...");
-  	commandFunc("logl 1");
+    logRaw(CLASS_MAIN, User, "Configure mode...");
+    commandFunc("logl 1");
   }
 }
 

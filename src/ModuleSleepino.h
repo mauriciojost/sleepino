@@ -64,7 +64,7 @@ public:
              void (*runModeArchitectureFunc)(),
              CmdExecStatus (*commandArchitectureFunc)(const char *cmd),
              void (*infoFunc)(),
-             void (*updateFunc)(const char *),
+             void (*updateFunc)(const char *, const char *),
              void (*testFunc)(),
              const char *(*apiDeviceLoginFunc)(),
              const char *(*apiDevicePassFunc)(),
@@ -142,11 +142,11 @@ public:
           logRaw(CLASS_MODULEB, Warn, "Arguments needed:\n  lcd <x> <y> <color> <wrap> <clear> <size> <str>");
           return InvalidArgs;
         }
-        logUser("-> Lcd %s", str);
+        log(CLASS_MODULEB, User, "-> Lcd %s", str);
         message(atoi(x), atoi(y), atoi(color), atoi(wrap), (MsgClearMode)atoi(clear), atoi(size), str);
         return Executed;
       } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
-        logRawUser(HELP_COMMAND_CLI_PROJECT);
+        logRaw(CLASS_MODULEB, User, HELP_COMMAND_CLI_PROJECT);
         return module->command("?");
       }
       // deallocate buffer memory

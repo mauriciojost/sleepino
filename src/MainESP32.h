@@ -142,7 +142,7 @@ const char *apiDevicePass() {
   return initializeTuningVariable(&apiDevicePwd, DEVICE_PWD_FILENAME, DEVICE_PWD_MAX_LENGTH, NULL, true)->getBuffer();
 }
 
-void logLine(const char *str) {
+void logLine(const char *str, const char *clz, LogLevel l) {
   Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   Serial.print(str);
   // telnet print
@@ -335,10 +335,10 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
 }
 
 void clearDevice() {
-  logUser("   rm %s", DEVICE_ALIAS_FILENAME);
-  logUser("   rm %s", DEVICE_PWD_FILENAME);
-  logUser("   ls");
-  logUser("   <remove all .properties>");
+  log(CLASS_MAIN, User, "   rm %s", DEVICE_ALIAS_FILENAME);
+  log(CLASS_MAIN, User, "   rm %s", DEVICE_PWD_FILENAME);
+  log(CLASS_MAIN, User, "   ls");
+  log(CLASS_MAIN, User, "   <remove all .properties>");
 }
 
 bool readFile(const char *fname, Buffer *content) {
@@ -383,10 +383,10 @@ void infoArchitecture() {}
 
 void testArchitecture() {}
 
-void updateFirmware(const char* descriptor) {
+void updateFirmware(const char* target, const char* current) {
   HTTPUpdate updater;
   Buffer url(FIRMWARE_UPDATE_URL_MAX_LENGTH);
-  url.fill(FIRMWARE_UPDATE_URL, descriptor);
+  url.fill(FIRMWARE_UPDATE_URL, target);
 
   Settings *s = m->getModuleSettings();
   bool connected = initWifi(s->getSsid(), s->getPass(), false, 10);
@@ -399,7 +399,7 @@ void updateFirmware(const char* descriptor) {
   log(CLASS_MAIN, Warn, "Current firmware '%s'", STRINGIFY(PROJ_VERSION));
   log(CLASS_MAIN, Warn, "Updating firmware from '%s'...", url.getBuffer());
 
-  t_httpUpdate_return ret = updater.update(httpClient.getStream(), url.getBuffer(), STRINGIFY(PROJ_VERSION));
+  t_httpUpdate_return ret = updater.update(httpClient.getStream(), url.getBuffer(), current);
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       log(CLASS_MAIN,
@@ -528,35 +528,35 @@ void runModeArchitecture() {
 
 CmdExecStatus commandArchitecture(const char *c) {
   if (strcmp("init", c) == 0) {
-    logRawUser("-> Initialize");
-    logRawUser("Execute:");
-    logRawUser("   ls");
-    logUser("   save %s <alias>", DEVICE_ALIAS_FILENAME);
-    logUser("   save %s <pwd>", DEVICE_PWD_FILENAME);
-    logRawUser("   wifissid <ssid>");
-    logRawUser("   wifipass <password>");
-    logUser("   save %s <contrast-0-100>", DEVICE_CONTRAST_FILENAME);
-    logRawUser("   (setup of power consumption settings architecture specific if any)");
-    logRawUser("   store");
-    logRawUser("   ls");
+    logRaw(CLASS_MAIN, User, "-> Initialize");
+    logRaw(CLASS_MAIN, User, "Execute:");
+    logRaw(CLASS_MAIN, User, "   ls");
+    log(CLASS_MAIN, User, "   save %s <alias>", DEVICE_ALIAS_FILENAME);
+    log(CLASS_MAIN, User, "   save %s <pwd>", DEVICE_PWD_FILENAME);
+    logRaw(CLASS_MAIN, User, "   wifissid <ssid>");
+    logRaw(CLASS_MAIN, User, "   wifipass <password>");
+    log(CLASS_MAIN, User, "   save %s <contrast-0-100>", DEVICE_CONTRAST_FILENAME);
+    logRaw(CLASS_MAIN, User, "   (setup of power consumption settings architecture specific if any)");
+    logRaw(CLASS_MAIN, User, "   store");
+    logRaw(CLASS_MAIN, User, "   ls");
     return Executed;
   } else if (strcmp("ls", c) == 0) {
     File root = SPIFFS.open("/");
     File file = root.openNextFile();
     while(file) {
-      logUser("- %s (%d bytes)", file.name(), (int)file.size());
+      log(CLASS_MAIN, User, "- %s (%d bytes)", file.name(), (int)file.size());
       file = root.openNextFile();
     }
     return Executed;
   } else if (strcmp("rm", c) == 0) {
     const char *f = strtok(NULL, " ");
     bool succ = SPIFFS.remove(f);
-    logUser("### File '%s' %s removed", f, (succ?"":"NOT"));
+    log(CLASS_MAIN, User, "### File '%s' %s removed", f, (succ?"":"NOT"));
     return Executed;
   } else if (strcmp("lcdcont", c) == 0) {
     const char *c = strtok(NULL, " ");
     int i = atoi(c);
-    logUser("Set contrast to: %d", i);
+    log(CLASS_MAIN, User, "Set contrast to: %d", i);
     lcd->setContrast(i);
     return Executed;
   } else if (strcmp("reset", c) == 0) {
@@ -570,7 +570,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     int s = atoi(strtok(NULL, " "));
     return (lightSleepInterruptable(now(), s)? ExecutedInterrupt: Executed);
   } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
-    logRawUser(HELP_COMMAND_ARCH_CLI);
+    logRaw(CLASS_MAIN, User, HELP_COMMAND_ARCH_CLI);
     return Executed;
   } else {
     return NotFound;
@@ -699,7 +699,7 @@ void handleInterrupt() {
           bool interrupt = (execStatus == ExecutedInterrupt);
           log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
           log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
-          logUser("('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
+          log(CLASS_MAIN, User, "('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
           cmdLast->load(cmdBuffer->getBuffer());
           cmdBuffer->clear();
         }
@@ -708,7 +708,7 @@ void handleInterrupt() {
         cmdBuffer->append(c);
       }
       // echo
-      logUser("> %s", cmdBuffer->getBuffer());
+      log(CLASS_MAIN, User, "> %s", cmdBuffer->getBuffer());
       while(!Serial.available()) {delay(100);}
   	}
     log(CLASS_MAIN, Debug, "Done with interrupt");
