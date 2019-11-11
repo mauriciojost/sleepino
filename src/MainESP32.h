@@ -43,10 +43,6 @@
 #define LCD_PIXEL_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
 
-#ifndef WIFI_DELAY_MS
-#define WIFI_DELAY_MS 10000
-#endif // WIFI_DELAY_MS
-
 #define MAX_ROUND_ROBIN_LOG_FILES 5
 
 #ifndef FIRMWARE_UPDATE_URL
@@ -61,14 +57,6 @@
 
 #define LOG_BUFFER_MAX_LENGTH 1024
 
-#ifndef URL_PRINT_MAX_LENGTH
-#define URL_PRINT_MAX_LENGTH 20
-#endif // URL_PRINT_MAX_LENGTH
-
-#ifndef USER_DELAY_MS
-#define USER_DELAY_MS 2000
-#endif // USER_DELAY_MS
-
 #define USER_LCD_FONT_SIZE 2
 
 //#define VCC_FLOAT ((float)ESP.getVcc() / 1024)
@@ -76,20 +64,7 @@
 #define ONLY_SHOW_MSG true
 #define SHOW_MSG_AND_REACT false
 
-#define WAIT_BEFORE_HTTP_MS 100
-
-
 #define HTTP_TIMEOUT_MS 60000
-
-// The module aims at waking up every X amount of deep slept seconds.
-// Imagine that we aim at waking up every hour.
-// A deep sleep of 3600 seconds could result in 3550 seconds (HW RTC not perfectly tuned).
-// If the processing finishes in 1 second, we will be ready in second 3551, so next wakeup will
-// be in 9 seconds, resulting in 2 wake-ups instead of 1 wake-up.
-// To prevent that from happening we add a tunable fixed supplement.
-#ifndef DEEP_SLEEP_SUPPLEMENT_SECS
-#define DEEP_SLEEP_SUPPLEMENT_SECS 60
-#endif // DEEP_SLEEP_SUPPLEMENT_SECS
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
   "\n  ESP32 HELP"                                                                                                                         \
