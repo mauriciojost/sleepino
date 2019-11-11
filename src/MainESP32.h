@@ -64,7 +64,9 @@
 #define ONLY_SHOW_MSG true
 #define SHOW_MSG_AND_REACT false
 
+#ifndef HTTP_TIMEOUT_MS
 #define HTTP_TIMEOUT_MS 60000
+#endif // HTTP_TIMEOUT_MS
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
   "\n  ESP32 HELP"                                                                                                                         \

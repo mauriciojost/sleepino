@@ -67,7 +67,10 @@ extern "C" {
 #include "user_interface.h"
 }
 
+#ifndef HTTP_TIMEOUT_MS
 #define HTTP_TIMEOUT_MS 60000
+#endif // HTTP_TIMEOUT_MS
+
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
   "\n  ESP8266 HELP"                                                                                                                       \
