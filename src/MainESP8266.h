@@ -148,13 +148,12 @@ void logLine(const char *str, const char *clz, LogLevel l) {
     lcd->display();
     delay(DELAY_MS_SPI);
   }
-  // filesystem logs
-  if (m->getSleepinoSettings()->fsLogsEnabled()) {
+  // local logs (to be sent via network)
+  if (m->getSleepinoSettings()->fsLogsEnabled() && (l >= Warn)) {
     if (logBuffer == NULL) {
       logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
     }
     logBuffer->append(str);
-    logBuffer->append("\n");
   }
 }
 
@@ -396,9 +395,16 @@ void debugHandle() {
   m->getSleepinoSettings()->getStatus()->fill("vcc:%0.4f,heap:%d", VCC_FLOAT, ESP.getFreeHeap());
   m->getSleepinoSettings()->getMetadata()->changed();
 
-  if (m->getSleepinoSettings()->fsLogsEnabled()) {
-    dumpLogBuffer();
+  if (logBuffer != NULL && m->getSleepinoSettings()->fsLogsEnabled()) {
+    log(CLASS_MAIN, Debug, "Push logs...");
+    PropSync *ps = m->getModule()->getPropSync();
+    PropSyncStatusCode status = ps->pushLogMessages(logBuffer->getBuffer());
+    if (ps->isFailure(status)) {
+      log(CLASS_MAIN, Warn, "Failed to push logs...");
+    }
+    logBuffer->clear();
   }
+
   telnet.handle();     // Handle telnet log server and commands
   ArduinoOTA.handle(); // Handle on the air firmware load
 }
@@ -474,18 +480,6 @@ bool haveToInterrupt() {
   }
 }
 
-void dumpLogBuffer() {
-  if (logBuffer == NULL)
-    return;
-
-  Buffer fname(16);
-  static int rr = 0;
-  rr = (rr + 1) % MAX_ROUND_ROBIN_LOG_FILES;
-  fname.fill("%d.log", rr);
-  bool suc = writeFile(fname.getBuffer(), logBuffer->getBuffer());
-  log(CLASS_MAIN, Warn, "Log: %s %s", fname.getBuffer(), BOOL(suc));
-  logBuffer->clear();
-}
 
 bool inDeepSleepMode() {
   return (bool)atoi(initializeTuningVariable(&deepSleepMode, DEVICE_DSLEEP_FILENAME, DEVICE_DSLEEP_MAX_LENGTH, "0", false)->getBuffer());
