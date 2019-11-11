@@ -10,12 +10,6 @@
 #define PROJ_VERSION "snapshot"
 #endif // PROJ_VERSION
 
-enum WifiNetwork {
-  WifiNoNetwork = 0,
-  WifiMainNetwork,
-  WifiBackupNetwork
-};
-
 //////////////////////////////////////////////////////////////
 // Provided by generic Main
 //////////////////////////////////////////////////////////////
@@ -42,9 +36,6 @@ const char *apiDevicePass();
 // The log function (that will print to screen, Serial, telnet, or whatever wished).
 // It should not include "\n" ending as the log4ino library handles newline addition.
 void logLine(const char *str);
-
-// Setup wifi using provided parameters.
-bool initWifi(const char *ssid, const char *pass, bool skipIfAlreadyConnected, int retries);
 
 // Stop wifi (and reduce power consumption).
 void stopWifi();
@@ -81,9 +72,6 @@ void infoArchitecture();
 
 // Perform tests on the architecture
 void testArchitecture();
-
-// Update the firmware and restart the device
-void updateFirmware(const char *target, const char *current);
 
 // Execution
 ///////////////////

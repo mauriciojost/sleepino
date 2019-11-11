@@ -27,7 +27,7 @@ ModuleSleepino *m;
 
 bool initWifiSimple() {
   Settings *s = m->getModuleSettings();
-  bool connected = initWifi(s->getSsid(), s->getPass(), true, 3);
+  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, 3);
   return connected;
 }
 

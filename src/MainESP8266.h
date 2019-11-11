@@ -13,6 +13,7 @@
 #include <RemoteDebug.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <primitives/BoardESP8266.h>
 
 #define DELAY_MS_SPI 1
 #define ABORT_DELAY_SECS 5
@@ -106,7 +107,6 @@ extern "C" {
   "\n  clearstack        : clear stack trace "                                                                                             \
   "\n"
 
-HTTPClient httpClient;
 RemoteDebug telnet;
 Adafruit_PCD8544* lcd = NULL;
 Buffer *apiDeviceId = NULL;
@@ -180,156 +180,6 @@ void logLine(const char *str, const char *clz, LogLevel l) {
   }
 }
 
-void stopWifi() {
-  if (!inDeepSleepMode()) {
-    log(CLASS_MAIN, Debug, "Wifi off...");
-    wifi_station_disconnect();
-    wifi_set_opmode(NULL_MODE);
-    wifi_set_sleep_type(MODEM_SLEEP_T);
-  } else {
-    log(CLASS_MAIN, Debug, "Skip wifi off...");
-  }
-}
-
-WifiNetwork chooseWifi(const char* ssid, const char* ssidb) {
-  int n = WiFi.scanNetworks();
-  for (int i = 0; i < n; ++i) {
-    String s = WiFi.SSID(i);
-    if (strcmp(s.c_str(), ssid) == 0) {
-      log(CLASS_MAIN, Info, "Wifi found '%s'", ssid);
-    	return WifiMainNetwork;
-    } else if  (strcmp(s.c_str(), ssidb) == 0) {
-      log(CLASS_MAIN, Info, "Wifi found '%s'", ssidb);
-    	return WifiBackupNetwork;
-    }
-  }
-  return WifiNoNetwork;
-}
-
-bool initWifi(const char *ssid, const char *pass, bool skipIfConnected, int retries) {
-  wl_status_t status;
-
-  const char* ssidb = m->getSleepinoSettings()->getBackupWifiSsid()->getBuffer();
-  const char* passb = m->getSleepinoSettings()->getBackupWifiPass()->getBuffer();
-
-  log(CLASS_MAIN, Info, "Init wifi '%s' (or '%s')...", ssid, ssidb);
-
-  bool wifiIsOff = (wifi_get_opmode() == NULL_MODE);
-  if (wifiIsOff) {
-    log(CLASS_MAIN, Debug, "Wifi off, turning on...");
-    wifi_fpm_do_wakeup();
-    wifi_fpm_close();
-    wifi_set_opmode(STATION_MODE);
-    wifi_station_connect();
-  } else {
-    log(CLASS_MAIN, Debug, "Wifi on already");
-  }
-
-  if (skipIfConnected) { // check if connected
-    log(CLASS_MAIN, Debug, "Already connected?");
-    status = WiFi.status();
-    if (status == WL_CONNECTED) {
-      log(CLASS_MAIN, Info, "IP: %s", WiFi.localIP().toString().c_str());
-      return true; // connected
-    }
-  } else {
-    stopWifi(); 
-  }
-
-  log(CLASS_MAIN, Debug, "Scanning...");
-  WifiNetwork w = chooseWifi(ssid, ssidb);
-
-  log(CLASS_MAIN, Debug, "Connecting...");
-  WiFi.mode(WIFI_STA);
-  delay(WIFI_DELAY_MS);
-  switch (w) {
-  	case WifiMainNetwork:
-      WiFi.begin(ssid, pass);
-      break;
-  	case WifiBackupNetwork:
-      WiFi.begin(ssidb, passb);
-      break;
-  	default:
-  		return false;
-  }
-
-  int attemptsLeft = retries;
-  while (true) {
-    bool interrupt = lightSleepInterruptable(now(), WIFI_DELAY_MS / 1000);
-    if (interrupt) {
-      log(CLASS_MAIN, Warn, "Wifi init interrupted");
-      return false; // not connected
-    }
-    status = WiFi.status();
-    log(CLASS_MAIN, Debug, "..'%s'(%d left)", ssid, attemptsLeft);
-    attemptsLeft--;
-    if (status == WL_CONNECTED) {
-      log(CLASS_MAIN, Debug, "Connected! %s", WiFi.localIP().toString().c_str());
-      return true; // connected
-    }
-    if (attemptsLeft < 0) {
-      log(CLASS_MAIN, Warn, "Connection to '%s' failed %d", ssid, status);
-      return false; // not connected
-    }
-  }
-}
-
-// TODO: add https support, which requires fingerprint of server that can be obtained as follows:
-//  openssl s_client -connect dweet.io:443 < /dev/null 2>/dev/null | openssl x509 -fingerprint -noout -in /dev/stdin
-int httpGet(const char *url, ParamStream *response, Table *headers) {
-  httpClient.begin(url);
-  int i = 0;
-  while ((i = headers->next(i)) != -1) {
-    httpClient.addHeader(headers->getKey(i), headers->getValue(i));
-    i++;
-  }
-  log(CLASS_MAIN, Debug, "> GET:..%s", tailStr(url, URL_PRINT_MAX_LENGTH));
-  int errorCode = httpClient.GET();
-  log(CLASS_MAIN, Debug, "> GET:%d", errorCode);
-
-  if (errorCode == HTTP_OK || errorCode == HTTP_NO_CONTENT) {
-    if (response != NULL) {
-      httpClient.writeToStream(response);
-    }
-  } else {
-    int e = httpClient.writeToStream(&Serial);
-    log(CLASS_MAIN, Error, "> GET(%d):%d %s", e, errorCode, httpClient.errorToString(errorCode).c_str());
-  }
-  httpClient.end();
-
-  delay(WAIT_BEFORE_HTTP_MS);
-
-  return errorCode;
-}
-
-int httpPost(const char *url, const char *body, ParamStream *response, Table *headers) {
-  httpClient.begin(url);
-  int i = 0;
-  while ((i = headers->next(i)) != -1) {
-    httpClient.addHeader(headers->getKey(i), headers->getValue(i));
-    i++;
-  }
-
-  log(CLASS_MAIN, Debug, "> POST:..%s", tailStr(url, URL_PRINT_MAX_LENGTH));
-  log(CLASS_MAIN, Debug, "> POST:'%s'", body);
-  int errorCode = httpClient.POST(body);
-  log(CLASS_MAIN, Debug, "> POST:%d", errorCode);
-
-  if (errorCode == HTTP_OK || errorCode == HTTP_CREATED) {
-    if (response != NULL) {
-      httpClient.writeToStream(response);
-    }
-  } else {
-    int e = httpClient.writeToStream(&Serial);
-    log(CLASS_MAIN, Error, "> POST(%d):%d %s", e, errorCode, httpClient.errorToString(errorCode).c_str());
-  }
-  httpClient.end();
-
-  delay(WAIT_BEFORE_HTTP_MS);
-
-  return errorCode;
-}
-
 void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int size, const char *str) {
   switch (clearMode) {
     case FullClear:
@@ -360,108 +210,15 @@ void clearDevice() {
   espSaveCrash.clear();
 }
 
-bool readFile(const char *fname, Buffer *content) {
-  bool success = false;
-  SPIFFS.begin();
-  bool exists = SPIFFS.exists(fname);
-  if (!exists) {
-    log(CLASS_MAIN, Warn, "File does not exist: %s", fname);
-    content->clear();
-    success = false;
-  } else {
-    File f = SPIFFS.open(fname, "r");
-    if (!f) {
-      log(CLASS_MAIN, Warn, "File reading failed: %s", fname);
-      content->clear();
-      success = false;
-    } else {
-      String s = f.readString();
-      content->load(s.c_str());
-      log(CLASS_MAIN, Debug, "File read: %s", fname);
-      success = true;
-    }
-  }
-  SPIFFS.end();
-  return success;
-}
-
-
-bool writeFile(const char *fname, const char *content) {
-  bool success = false;
-  SPIFFS.begin();
-  File f = SPIFFS.open(fname, "w+");
-  if (!f) {
-    log(CLASS_MAIN, Warn, "File writing failed: %s", fname);
-    success = false;
-  } else {
-    f.write((const uint8_t *)content, strlen(content));
-    log(CLASS_MAIN, Debug, "File written: %s", fname);
-    success = true;
-  }
-  SPIFFS.end();
-  return success;
-}
-
 void infoArchitecture() {}
 
 void testArchitecture() {}
 
-void updateFirmware(const char* target, const char* current) {
-  ESP8266HTTPUpdate updater;
-  Buffer url(FIRMWARE_UPDATE_URL_MAX_LENGTH);
-  url.fill(FIRMWARE_UPDATE_URL, target);
-
-  Settings *s = m->getModuleSettings();
-  bool connected = initWifi(s->getSsid(), s->getPass(), false, 10);
-  if (!connected) {
-    log(CLASS_MAIN, Error, "Cannot connect to wifi");
-    return; // fail fast
-  }
-
-  log(CLASS_MAIN, Warn, "Current firmware '%s'", STRINGIFY(PROJ_VERSION));
-  log(CLASS_MAIN, Warn, "Updating firmware from '%s'...", url.getBuffer());
-  
-  t_httpUpdate_return ret = updater.update(url.getBuffer(), current);
-  switch (ret) {
-    case HTTP_UPDATE_FAILED:
-      log(CLASS_MAIN,
-          Error,
-          "HTTP_UPDATE_FAILD Error (%d): %s\n",
-          ESPhttpUpdate.getLastError(),
-          ESPhttpUpdate.getLastErrorString().c_str());
-      break;
-    case HTTP_UPDATE_NO_UPDATES:
-      log(CLASS_MAIN, Debug, "No updates.");
-      break;
-    case HTTP_UPDATE_OK:
-      log(CLASS_MAIN, Debug, "Done!");
-      break;
-  }
-}
-
 // Execution
 ///////////////////
 
-void deepSleepNotInterruptable(time_t cycleBegin, time_t periodSecs) {
-  Timing t = Timing();
-  time_t n = now();
-
-  // light sleep to allow user intervention
-  bool inte = lightSleepInterruptable(n, PRE_DEEP_SLEEP_WINDOW_SECS);
-
-	// calculate time to boot regularly at the same moments
-  t.setCurrentTime(n);
-  t.setFreqEverySecs((int)periodSecs);
-  time_t toSleepSecs = t.secsToMatch(MAX_DEEP_SLEEP_PERIOD_SECS);
-
-  if (!inte) {
-  	// if no intervention, deep sleep
-    deepSleepNotInterruptableSecs(n, toSleepSecs + DEEP_SLEEP_SUPPLEMENT_SECS);
-  }
-}
-
 bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
-  return lightSleepInterruptable(cycleBegin, periodSecs);
+  return lightSleepInterruptable(cycleBegin, periodSecs, m->getModuleSettings()->miniPeriodMsec(), haveToInterrupt, heartbeat);
 }
 
 BotMode setupArchitecture() {
@@ -527,7 +284,7 @@ BotMode setupArchitecture() {
   }
 
   log(CLASS_MAIN, Debug, "Letting user interrupt...");
-  bool i = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
+  bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
     return ConfigureMode;
   } else {
@@ -606,7 +363,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     return Executed;
   } else if (strcmp("lightsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
-    return (lightSleepInterruptable(now(), s) ? ExecutedInterrupt : Executed);
+    return (sleepInterruptable(now(), s) ? ExecutedInterrupt : Executed);
   } else if (strcmp("clearstack", c) == 0) {
     espSaveCrash.clear();
     return Executed;
@@ -627,7 +384,7 @@ void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
   if (inDeepSleepMode()) {
     log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
-    bool inte = lightSleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
+    bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
     if (!inte) {
       deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
     } else {
@@ -636,7 +393,7 @@ void abort(const char *msg) {
     }
   } else {
     log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
-    bool inte = lightSleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
+    bool inte = sleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
     if (!inte) {
       ESP.restart();
     } else {
@@ -688,32 +445,6 @@ void reactCommandCustom() { // for the use via telnet
 }
 
 void heartbeat() { }
-
-bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs) {
-  log(CLASS_MAIN, Debug, "Light Sleep(%ds)...", (int)periodSecs);
-  if (haveToInterrupt()) { // first quick check before any time considerations
-    return true;
-  }
-  while (now() < cycleBegin + periodSecs) {
-    if (haveToInterrupt()) {
-      return true;
-    }
-    heartbeat();
-    delay(m->getModuleSettings()->miniPeriodMsec());
-  }
-  return false;
-}
-
-void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs) {
-  time_t p = (periodSecs > MAX_DEEP_SLEEP_PERIOD_SECS ? MAX_DEEP_SLEEP_PERIOD_SECS : periodSecs);
-  log(CLASS_MAIN, Debug, "Deep Sleep(%ds)...", (int)p);
-  time_t spentSecs = now() - cycleBegin;
-  time_t leftSecs = p - spentSecs;
-  if (leftSecs > 0) {
-    //lcd->command(PCD8544_FUNCTIONSET | PCD8544_POWERDOWN);
-    ESP.deepSleep(leftSecs * 1000000L, WAKE_RF_DEFAULT);
-  }
-}
 
 void handleInterrupt() {
   if (Serial.available()) {
