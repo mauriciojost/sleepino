@@ -141,3 +141,9 @@
 /src/Adafruit_PCD8544.h
 /src/primitives
 /libs/arduino-boards-primitives/
+/bump_version
+/format_code
+/launch_tests
+/pull_dependencies
+/serial_monitor
+/upload
