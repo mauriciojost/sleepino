@@ -130,5 +130,7 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
   return *var;
 }
 
+bool initWifiSimple();
+
 
 #endif // MAIN_INC

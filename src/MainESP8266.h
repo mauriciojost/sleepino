@@ -149,7 +149,7 @@ void logLine(const char *str, const char *clz, LogLevel l) {
     delay(DELAY_MS_SPI);
   }
   // local logs (to be sent via network)
-  if (m->getSleepinoSettings()->fsLogsEnabled() && (l >= Warn)) {
+  if (m->getSleepinoSettings()->fsLogsEnabled()) {
     if (logBuffer == NULL) {
       logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
     }
@@ -398,6 +398,7 @@ void debugHandle() {
   if (logBuffer != NULL && m->getSleepinoSettings()->fsLogsEnabled()) {
     log(CLASS_MAIN, Debug, "Push logs...");
     PropSync *ps = m->getModule()->getPropSync();
+    initWifiSimple();
     PropSyncStatusCode status = ps->pushLogMessages(logBuffer->getBuffer());
     if (ps->isFailure(status)) {
       log(CLASS_MAIN, Warn, "Failed to push logs...");
