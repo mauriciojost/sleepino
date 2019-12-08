@@ -147,3 +147,4 @@
 /pull_dependencies
 /serial_monitor
 /upload
+/.serial.log
