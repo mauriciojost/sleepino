@@ -134,6 +134,12 @@ const char *apiDevicePass() {
 
 void logLine(const char *str, const char *clz, LogLevel l) {
   Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
+  int ts = (int)(now() % 10000);
+  Buffer aux(8);
+  aux.fill("%d|", ts);
+
+  Serial.print(ts);
+  Serial.print('|');
   Serial.print(str);
 #ifdef TELNET_ENABLED
   // telnet print
@@ -161,6 +167,7 @@ void logLine(const char *str, const char *clz, LogLevel l) {
     if (logBuffer == NULL) {
       logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
     }
+    logBuffer->append(aux.getBuffer());
     logBuffer->append(str);
   }
 }
