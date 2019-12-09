@@ -62,13 +62,13 @@ void setup() {
   log(CLASS_MAIN, Info, "Startup properties...");
   ModuleStartupPropertiesCode s = m->startupProperties();
   if (s != ModuleStartupPropertiesCodeSuccess && s != ModuleStartupPropertiesCodeSkipped) {
-     abort("Cannot startup properties");
+    log(CLASS_MAIN, Error, "Failed: %d", (int)s);
+    abort("Cannot startup properties");
   }
   log(CLASS_MAIN, Info, "Setup done.");
   log(CLASS_MAIN, Info, "Loop started...");
   if (m->getBot()->getMode() == ConfigureMode) {
     logRaw(CLASS_MAIN, User, "Configure mode...");
-    commandFunc("logl 1");
   }
 }
 
