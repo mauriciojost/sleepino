@@ -2,7 +2,9 @@
 #include <Adafruit_GFX.h>      // include adafruit graphics library
 #include <Adafruit_PCD8544.h>  // include adafruit PCD8544 (Nokia 5110) library
 #include <Arduino.h>
+#ifdef OTA_ENABLED
 #include <ArduinoOTA.h>
+#endif // OTA_ENABLED
 #include <HTTPClient.h>
 #include <SPIFFS.h>
 #include <HTTPUpdate.h>
@@ -10,7 +12,9 @@
 #include <FS.h>
 #include <Main.h>
 #include <Pinout.h>
+#ifdef TELNET_ENABLED
 #include <RemoteDebug.h>
+#endif // TELNET_ENABLED
 #include <SPI.h>
 #include <Wire.h>
 #include <primitives/BoardESP32.h>
@@ -79,7 +83,9 @@
   "\n  lightsleep ...    : light sleep N provided seconds"                                                                                 \
   "\n"
 
+#ifdef TELNET_ENABLED
 RemoteDebug telnet;
+#endif // TELNET_ENABLED
 Adafruit_PCD8544* lcd = NULL;
 Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
@@ -122,12 +128,14 @@ const char *apiDevicePass() {
 void logLine(const char *str, const char *clz, LogLevel l) {
   Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   Serial.print(str);
+#ifdef TELNET_ENABLED
   // telnet print
   if (telnet.isActive()) {
     for (unsigned int i = 0; i < strlen(str); i++) {
       telnet.write(str[i]);
     }
   }
+#endif // TELNET_ENABLED
   // lcd print
   if (lcd != NULL && m->getSleepinoSettings()->getLcdLogs()) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
@@ -239,9 +247,11 @@ BotMode setupArchitecture() {
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup commands");
+#ifdef TELNET_ENABLED
   telnet.setCallBackProjectCmds(reactCommandCustom);
   String helpCli("Type 'help' for help");
   telnet.setHelpProjectsCmds(helpCli);
+#endif // TELNET_ENABLED
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Letting user interrupt...");
@@ -361,8 +371,12 @@ void debugHandle() {
   static bool firstTime = true;
   if (firstTime) {
     log(CLASS_MAIN, Debug, "Initialize debuggers...");
+#ifdef TELNET_ENABLED
     telnet.begin(apiDeviceLogin()); // Intialize the remote logging framework
+#endif // TELNET_ENABLED
+#ifdef OTA_ENABLED
     ArduinoOTA.begin();             // Intialize OTA
+#endif // OTA_ENABLED
     firstTime = false;
   }
 
@@ -380,8 +394,12 @@ void debugHandle() {
     logBuffer->clear();
   }
 
+#ifdef TELNET_ENABLED
   telnet.handle();     // Handle telnet log server and commands
+#endif // TELNET_ENABLED
+#ifdef OTA_ENABLED
   ArduinoOTA.handle(); // Handle on the air firmware load
+#endif // OTA_ENABLED
 }
 
 void bitmapToLcd(uint8_t bitmap[]) {
@@ -400,7 +418,9 @@ void bitmapToLcd(uint8_t bitmap[]) {
 }
 
 void reactCommandCustom() { // for the use via telnet
+#ifdef TELNET_ENABLED
   m->command(telnet.getLastCommand().c_str());
+#endif // TELNET_ENABLED
 }
 
 void heartbeat() { }
