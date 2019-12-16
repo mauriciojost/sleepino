@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -x 
+set -e
+
+rm -f .simulator.bin
+
+PROFILE="$1"
+
+VERSION=`cat library.json | python -c 'import sys, json; print json.load(sys.stdin)["version"]'`
+COMMIT_ID="`git rev-parse --short HEAD`"
+PROJ_VERSION_ID="$VERSION-$COMMIT_ID" 
+
+PARAM_FLAGS="-D X86_64 -D PROJ_VERSION=$PROJ_VERSION_ID `cat $PROFILE | grep -v '^#'`"
+
+FLAGS="-U ARDUINO $PARAM_FLAGS"
+
+SRC="
+src/Main.cpp
+src/Time.cpp
+src/Base64.cpp
+src/DateStrings.cpp
+src/main4ino/*.cpp
+src/log4ino/*.cpp
+"
+
+HEADERS="
+-I src/
+-I src/actors/
+-I src/log4ino
+-I src/main4ino
+"
+
+LIBS=""
+
+rm -f .simulator.bin
+
+g++ -Wno-deprecated-declarations -g -ggdb -o .simulator.bin $FLAGS $SRC $HEADERS $LIBS
+shift
+./.simulator.bin $@
+#gdbtui ./.simulator.bin
+
+rm -f .simulator.bin
