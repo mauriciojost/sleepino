@@ -40,12 +40,6 @@ void logLine(const char *str);
 // Stop wifi (and reduce power consumption).
 void stopWifi();
 
-// HTTP GET function.
-int httpGet(const char *url, ParamStream *response, Table *headers);
-
-// HTTP POST function.
-int httpPost(const char *url, const char *body, ParamStream *response, Table *headers);
-
 // Message function.
 // Parameters x/y are text coordinates: 1;0 means second line to the left.
 void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
