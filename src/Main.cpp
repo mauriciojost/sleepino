@@ -35,6 +35,15 @@ void commandFunc(const char* c) {
 	m->command(c);
 }
 
+void updateFirmwareVersion(const char *targetVersion, const char *currentVersion) {
+  bool c = initWifiSimple();
+  if (c) {
+    updateFirmwareFromMain4ino("sleepino", PLATFORM_ID, targetVersion, currentVersion);
+  } else {
+    log(CLASS_MAIN, Error, "Could not update");
+  }
+}
+
 void setup() {
   m = new ModuleSleepino();
   m->setup(setupArchitecture,
@@ -51,7 +60,7 @@ void setup() {
            runModeArchitecture,
            commandArchitecture,
            infoArchitecture,
-           updateFirmware,
+           updateFirmwareVersion,
            testArchitecture,
            apiDeviceLogin,
            apiDevicePass,
