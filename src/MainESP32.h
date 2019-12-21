@@ -21,7 +21,6 @@
 
 #define FORMAT_SPIFFS_IF_FAILED true
 #define DELAY_MS_SPI 3
-#define ABORT_DELAY_SECS 5
 #define HW_STARTUP_DELAY_MSECS 10
 
 #define DEVICE_ALIAS_FILENAME "/alias.tuning"
@@ -41,32 +40,13 @@
 
 #define SLEEP_PERIOD_PRE_ABORT_SEC 5
 
-#define MAX_DEEP_SLEEP_PERIOD_SECS 2100 // 35 minutes
-
 #define LCD_PIXEL_WIDTH 6
 #define LCD_PIXEL_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
 
-#define MAX_ROUND_ROBIN_LOG_FILES 5
-
-#ifndef FIRMWARE_UPDATE_URL
-#define FIRMWARE_UPDATE_URL MAIN4INOSERVER_API_HOST_BASE "/firmwares/sleepino/esp32.%s.bin"
-#endif // FIRMWARE_UPDATE_URL
-
-#define FIRMWARE_UPDATE_URL_MAX_LENGTH 128
-
-#define PRE_DEEP_SLEEP_WINDOW_SECS 5
-
 #define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 6)
 
 #define LOG_BUFFER_MAX_LENGTH 1024
-
-#define USER_LCD_FONT_SIZE 2
-
-//#define VCC_FLOAT ((float)ESP.getVcc() / 1024)
-
-#define ONLY_SHOW_MSG true
-#define SHOW_MSG_AND_REACT false
 
 #ifndef HTTP_TIMEOUT_MS
 #define HTTP_TIMEOUT_MS 60000
