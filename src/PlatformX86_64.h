@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
-#include <Main.h>
+#include <Platform.h>
 #include <primitives/BoardX86_64.h>
 
 #ifndef SIMULATOR_LOGIN

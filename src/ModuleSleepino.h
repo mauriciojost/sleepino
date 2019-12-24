@@ -19,6 +19,7 @@
   "\n  help            : show this help"                                                                                                   \
   "\n"
 
+bool alwaysTrue() {return true;}
 /**
  * This class represents the integration of all components (LCD, buttons, buzzer, etc).
  */
@@ -33,7 +34,6 @@ private:
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
   void (*commandFunc)(const char *str);
-  bool (*oneRunModeFunc)();
 
 public:
   ModuleSleepino() {
@@ -46,7 +46,6 @@ public:
 
     message = NULL;
     commandFunc = NULL;
-    oneRunModeFunc = NULL;
   }
 
   void setup(BotMode (*setupArchitectureFunc)(),
@@ -67,8 +66,7 @@ public:
              void (*testFunc)(),
              const char *(*apiDeviceLoginFunc)(),
              const char *(*apiDevicePassFunc)(),
-             void (*cmdFunc)(const char*),
-             bool (*oneRunMode)()
+             void (*cmdFunc)(const char*)
   ) {
 
     module->setup(setupArchitectureFunc,
@@ -88,11 +86,10 @@ public:
                   testFunc,
                   apiDeviceLoginFunc,
                   apiDevicePassFunc,
-                  oneRunMode);
+                  alwaysTrue);
 
     message = messageFunc;
     commandFunc = cmdFunc;
-    oneRunModeFunc = oneRunMode;
 
     bsettings->setup(commandFunc);
   }
@@ -100,14 +97,12 @@ public:
   ModuleStartupPropertiesCode startupProperties() {
     ModuleStartupPropertiesCode c = module->startupProperties();
 
-    if (oneRunModeFunc != NULL && oneRunModeFunc()) {
-      // if running once every while, stay with properties synchronization
-    	// at the beginning and before sleeping, and nothing else
-      log(CLASS_MODULEB, Debug, "Force-skip acting synchronization");
-      Buffer never("never");
-      module->getPropSync()->setPropValue(PropSyncFreqProp, &never);
-      module->getPropSync()->setPropValue(PropForceSyncFreqProp, &never);
-    }
+    // if running once every while, stay with properties synchronization
+      // at the beginning and before sleeping, and nothing else
+    log(CLASS_MODULEB, Debug, "Force-skip acting synchronization");
+    Buffer never("never");
+    module->getPropSync()->setPropValue(PropSyncFreqProp, &never);
+    module->getPropSync()->setPropValue(PropForceSyncFreqProp, &never);
 
     return c;
 
