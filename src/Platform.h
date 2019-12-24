@@ -16,6 +16,10 @@
 #define HTTP_TIMEOUT_MS 10000
 #endif // HTTP_TIMEOUT_MS
 
+#ifndef USER_INTERACTION_LOOPS_MAX
+#define USER_INTERACTION_LOOPS_MAX 40
+#endif // USER_INTERACTION_LOOPS_MAX
+
 ModuleSleepino *m;
 
 //////////////////////////////////////////////////////////////

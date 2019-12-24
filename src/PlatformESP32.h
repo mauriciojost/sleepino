@@ -20,7 +20,7 @@
 #include <primitives/BoardESP32.h>
 
 #define FORMAT_SPIFFS_IF_FAILED true
-#define DELAY_MS_SPI 3
+#define DELAY_MS_SPI 1
 #define HW_STARTUP_DELAY_MSECS 10
 
 #define DEVICE_ALIAS_FILENAME "/alias.tuning"
@@ -37,8 +37,8 @@
 
 #define SLEEP_PERIOD_PRE_ABORT_SEC 5
 
-#define LCD_PIXEL_WIDTH 6
-#define LCD_PIXEL_HEIGHT 8
+#define LCD_CHAR_WIDTH 6
+#define LCD_CHAR_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
 
 #define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 6)
@@ -118,10 +118,10 @@ void logLine(const char *str, const char *clz, LogLevel l) {
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
     int line = currentLogLine + 2;
     lcd->setTextWrap(false);
-    lcd->fillRect(0, line * LCD_PIXEL_HEIGHT, 84, LCD_PIXEL_HEIGHT, WHITE);
+    lcd->fillRect(0, line * LCD_CHAR_HEIGHT, 84, LCD_CHAR_HEIGHT, WHITE);
     lcd->setTextSize(1);
     lcd->setTextColor(BLACK);
-    lcd->setCursor(0, line * LCD_PIXEL_HEIGHT);
+    lcd->setCursor(0, line * LCD_CHAR_HEIGHT);
     lcd->print(str);
     lcd->display();
     delay(DELAY_MS_SPI);
@@ -142,7 +142,7 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
       lcd->clearDisplay();
       break;
     case LineClear:
-      lcd->fillRect(x * size * LCD_PIXEL_WIDTH, y * size * LCD_PIXEL_HEIGHT, 128, size * LCD_PIXEL_HEIGHT, !color);
+      lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
       wrap = false;
       break;
     case NoClear:
@@ -151,7 +151,7 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
   lcd->setTextWrap(wrap);
   lcd->setTextSize(size);
   lcd->setTextColor(color);
-  lcd->setCursor(x * size * LCD_PIXEL_WIDTH, y * size * LCD_PIXEL_HEIGHT);
+  lcd->setCursor(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT);
   lcd->print(str);
   lcd->display();
   log(CLASS_MAIN, Debug, "Msg(%d,%d):%s", x, y, str);
@@ -184,7 +184,7 @@ BotMode setupArchitecture() {
 
   // Intialize the logging framework
   Serial.begin(115200);     // Initialize serial port
-  Serial.setTimeout(10); // Timeout for read
+  Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
   log(CLASS_MAIN, Info, "Log initialized");
 
@@ -198,7 +198,6 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup SPIFFS");
   SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
 
-  log(CLASS_MAIN, Debug, "Setup pins & deepsleep (if failure think of activating deep sleep mode?)");
 
   log(CLASS_MAIN, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
@@ -354,7 +353,7 @@ void debugHandle() {
   if (logBuffer != NULL && m->getSleepinoSettings()->fsLogsEnabled()) {
     log(CLASS_MAIN, Debug, "Push logs...");
     PropSync *ps = m->getModule()->getPropSync();
-    initWifiSimple();
+
     PropSyncStatusCode status = ps->pushLogMessages(logBuffer->getBuffer());
     if (ps->isFailure(status)) {
       log(CLASS_MAIN, Warn, "Failed to push logs...");
@@ -396,9 +395,10 @@ void heartbeat() { }
 void handleInterrupt() {
   if (Serial.available()) {
     // Handle serial commands
-  	uint8_t c;
+    uint8_t c;
 
-  	while (true) {
+    while (true) {
+      int inLoop = 0;
       size_t n = Serial.readBytes(&c, 1);
 
       if (c == 0x08 && n == 1) { // backspace
@@ -409,9 +409,7 @@ void handleInterrupt() {
       } else if (c == 0x1b && n == 1) { // up/down
         log(CLASS_MAIN, Debug, "Up/down");
         cmdBuffer->load(cmdLast->getBuffer());
-      } else if ((c == '\r') && n == 1) { // ignore
-        log(CLASS_MAIN, Debug, "\\r pressed (ignored)");
-      } else if (c == '\n' && n == 1) { // if enter is pressed...
+      } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
         log(CLASS_MAIN, Debug, "Enter");
         if (cmdBuffer->getLength() > 0) {
           CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
@@ -423,14 +421,22 @@ void handleInterrupt() {
           cmdBuffer->clear();
         }
         break;
-      } else if (n == 1){
+      } else if (n == 1) {
         cmdBuffer->append(c);
       }
       // echo
-      log(CLASS_MAIN, User, "> %s", cmdBuffer->getBuffer());
-      while(!Serial.available()) {delay(100);}
-  	}
+      log(CLASS_MAIN, User, "> %s (%d)", cmdBuffer->getBuffer(), (int)c);
+      while (!Serial.available() && inLoop < USER_INTERACTION_LOOPS_MAX) {
+        inLoop++;
+        delay(100);
+      }
+      if (inLoop >= USER_INTERACTION_LOOPS_MAX) {
+        log(CLASS_MAIN, User, "> (timeout)");
+        break;
+      }
+    }
     log(CLASS_MAIN, Debug, "Done with interrupt");
+
   }
 }
 
