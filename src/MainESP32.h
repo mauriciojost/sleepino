@@ -29,9 +29,6 @@
 #define DEVICE_PWD_FILENAME "/pass.tuning"
 #define DEVICE_PWD_MAX_LENGTH 16
 
-#define DEVICE_DSLEEP_FILENAME "/deepsleep.tuning"
-#define DEVICE_DSLEEP_MAX_LENGTH 1
-
 #define DEVICE_CONTRAST_FILENAME "/contrast.tuning"
 #define DEVICE_CONTRAST_MAX_LENGTH 3
 
@@ -65,7 +62,6 @@ RemoteDebug telnet;
 Adafruit_PCD8544* lcd = NULL;
 Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
-Buffer *deepSleepMode = NULL;
 Buffer *contrast = NULL;
 int currentLogLine = 0;
 Buffer *logBuffer = NULL;
@@ -83,7 +79,6 @@ void debugHandle();
 bool haveToInterrupt();
 void handleInterrupt();
 void dumpLogBuffer();
-bool inDeepSleepMode();
 int lcdContrast();
 
 ////////////////////////////////////////
@@ -326,23 +321,13 @@ void configureModeArchitecture() {
 
 void abort(const char *msg) {
   log(CLASS_MAIN, Error, "Abort: %s", msg);
-  if (inDeepSleepMode()) {
-    log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
-    bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
-    if (!inte) {
-      deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
-    } else {
-      m->getBot()->setMode(ConfigureMode);
-      log(CLASS_MAIN, Warn, "Abort skipped");
-    }
+  log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
+  bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
+  if (!inte) {
+    deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
-    log(CLASS_MAIN, Warn, "Will light sleep and restart upon abort...");
-    bool inte = sleepInterruptable(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
-    if (!inte) {
-      ESP.restart();
-    } else {
-    	m->getBot()->setMode(ConfigureMode);
-    }
+    m->getBot()->setMode(ConfigureMode);
+    log(CLASS_MAIN, Warn, "Abort skipped");
   }
 }
 
@@ -458,10 +443,6 @@ bool haveToInterrupt() {
   }
 }
 
-
-bool inDeepSleepMode() {
-  return (bool)atoi(initializeTuningVariable(&deepSleepMode, DEVICE_DSLEEP_FILENAME, DEVICE_DSLEEP_MAX_LENGTH, "0", false)->getBuffer());
-}
 
 int lcdContrast() {
   return atoi(initializeTuningVariable(&contrast, DEVICE_CONTRAST_FILENAME, DEVICE_CONTRAST_MAX_LENGTH, "50", false)->getBuffer());
