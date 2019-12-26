@@ -65,7 +65,8 @@ void setup() {
            testArchitecture,
            apiDeviceLogin,
            apiDevicePass,
-           commandFunc
+           commandFunc,
+           getLogBuffer
   );
   log(CLASS_MAIN, Info, "Startup properties...");
   ModuleStartupPropertiesCode s = m->startupProperties();

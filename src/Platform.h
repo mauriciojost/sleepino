@@ -20,7 +20,8 @@
 #define USER_INTERACTION_LOOPS_MAX 40
 #endif // USER_INTERACTION_LOOPS_MAX
 
-ModuleSleepino *m;
+Buffer *logBuffer = NULL;
+ModuleSleepino *m = NULL;
 
 //////////////////////////////////////////////////////////////
 // To be provided by the Main of a specific architecture
@@ -126,5 +127,8 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
   return *var;
 }
 
+Buffer *getLogBuffer() {
+  return logBuffer;
+}
 
 #endif // PLATFORM_INC

@@ -66,7 +66,8 @@ public:
              void (*testFunc)(),
              const char *(*apiDeviceLoginFunc)(),
              const char *(*apiDevicePassFunc)(),
-             void (*cmdFunc)(const char*)
+             void (*cmdFunc)(const char*),
+             Buffer *(*getLogBufferFunc)()
   ) {
 
     module->setup(setupArchitectureFunc,
@@ -86,7 +87,8 @@ public:
                   testFunc,
                   apiDeviceLoginFunc,
                   apiDevicePassFunc,
-                  alwaysTrue);
+                  alwaysTrue,
+                  getLogBufferFunc);
 
     message = messageFunc;
     commandFunc = cmdFunc;

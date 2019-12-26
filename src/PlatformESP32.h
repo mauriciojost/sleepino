@@ -64,7 +64,6 @@ Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
 Buffer *contrast = NULL;
 int currentLogLine = 0;
-Buffer *logBuffer = NULL;
 Buffer *cmdBuffer = NULL;
 Buffer *cmdLast = NULL;
 
@@ -347,19 +346,8 @@ void debugHandle() {
     firstTime = false;
   }
 
-  m->getSleepinoSettings()->getStatus()->fill("heap:%d", ESP.getFreeHeap());
+  m->getSleepinoSettings()->getStatus()->fill("heap:%d/%d", ESP.getFreeHeap(), ESP.getHeapSize());
   m->getSleepinoSettings()->getMetadata()->changed();
-
-  if (logBuffer != NULL && m->getSleepinoSettings()->fsLogsEnabled()) {
-    log(CLASS_MAIN, Debug, "Push logs...");
-    PropSync *ps = m->getModule()->getPropSync();
-
-    PropSyncStatusCode status = ps->pushLogMessages(logBuffer->getBuffer());
-    if (ps->isFailure(status)) {
-      log(CLASS_MAIN, Warn, "Failed to push logs...");
-    }
-    logBuffer->clear();
-  }
 
 #ifdef TELNET_ENABLED
   telnet.handle();     // Handle telnet log server and commands
