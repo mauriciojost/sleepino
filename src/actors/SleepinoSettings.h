@@ -33,7 +33,7 @@ public:
     name = n;
     lcdLogs = true;
     status = new Buffer(STATUS_BUFFER_SIZE);
-    fsLogs = false;
+    fsLogs = true;
     ssidb = new Buffer(20);
     ssidb->load("defaultssid");
     passb = new Buffer(20);
