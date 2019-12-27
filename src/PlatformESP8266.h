@@ -372,7 +372,7 @@ void debugHandle() {
     firstTime = false;
   }
 
-  m->getSleepinoSettings()->getStatus()->fill("vcc:%0.4f,heap:%d/%d", VCC_FLOAT, ESP.getFreeHeap(), ESP.getHeapSize());
+  m->getSleepinoSettings()->getStatus()->fill("vcc:%0.4f,freeheap:%d", VCC_FLOAT, ESP.getFreeHeap());
 
   m->getSleepinoSettings()->getMetadata()->changed();
 
