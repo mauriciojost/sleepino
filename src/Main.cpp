@@ -12,17 +12,14 @@
 #ifdef ARDUINO
 
 #ifdef ESP8266 // on ESP8266
-#define PLATFORM_ID "esp8266"
 #include <PlatformESP8266.h>
 #endif // ESP8266
 
 #ifdef ESP32 // on ESP32
-#define PLATFORM_ID "esp32"
 #include <PlatformESP32.h>
 #endif // ESP32
 
 #else // on PC
-#define PLATFORM_ID "X86_64"
 #include <PlatformX86_64.h>
 #endif // ARDUINO
 

@@ -2,6 +2,7 @@
 #define MODULE_SLEEPINO_INC
 
 #include <Pinout.h>
+#include <Constants.h>
 #include <log4ino/Log.h>
 #include <main4ino/Actor.h>
 
@@ -70,7 +71,9 @@ public:
              Buffer *(*getLogBufferFunc)()
   ) {
 
-    module->setup(setupArchitectureFunc,
+    module->setup(PROJECT_ID,
+                  PLATFORM_ID,
+                  setupArchitectureFunc,
                   initWifiFunc,
                   stopWifiFunc,
                   httpMethodFunc,
