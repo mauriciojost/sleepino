@@ -96,7 +96,6 @@ const char *apiDevicePass() {
 }
 
 void logLine(const char *str, const char *clz, LogLevel l) {
-  Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   int ts = (int)(now() % 10000);
   Buffer aux(8);
   aux.fill("%d|", ts);
@@ -338,6 +337,7 @@ void abort(const char *msg) {
 
 void debugHandle() {
   static bool firstTime = true;
+  Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   if (firstTime) {
     log(CLASS_MAIN, Debug, "Initialize debuggers...");
 #ifdef TELNET_ENABLED
