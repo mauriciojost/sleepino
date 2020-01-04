@@ -53,7 +53,7 @@ public:
              void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str),
              bool (*initWifiFunc)(),
              void (*stopWifiFunc)(),
-             int (*httpMethodFunc)(HttpMethod m, const char *url, const char *body, ParamStream *response, Table *headers),
+             int (*httpMethodFunc)(HttpMethod m, const char *url, const char *body, ParamStream *response, Table *headers, const char *fingerp),
              void (*clearDeviceFunc)(),
              bool (*fileReadFunc)(const char *fname, Buffer *content),
              bool (*fileWriteFunc)(const char *fname, const char *content),
