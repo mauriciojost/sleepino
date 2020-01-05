@@ -23,6 +23,8 @@
 #include <PlatformX86_64.h>
 #endif // ARDUINO
 
+#define PROJECT_ID "sleepino"
+
 bool initWifiSimple() {
   Settings *s = m->getModuleSettings();
   bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, 3);
@@ -30,13 +32,13 @@ bool initWifiSimple() {
 }
 
 void commandFunc(const char* c) {
-	m->command(c);
+  m->command(c);
 }
 
 void updateFirmwareVersion(const char *targetVersion, const char *currentVersion) {
   bool c = initWifiSimple();
   if (c) {
-    updateFirmwareFromMain4ino("sleepino", PLATFORM_ID, targetVersion, currentVersion);
+    updateFirmwareFromMain4ino(m->getModule()->getPropSync()->getSession(), apiDeviceLogin(), PROJECT_ID, PLATFORM_ID, targetVersion, currentVersion);
   } else {
     log(CLASS_MAIN, Error, "Could not update");
   }
