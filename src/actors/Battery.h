@@ -26,7 +26,7 @@ private:
   float (*vcc)();
 
 public:
-  SleepinoSettings(const char *n) {
+  Battery(const char *n) {
     name = n;
     md = new Metadata(n);
     md->getTiming()->setFreq("~10m");
