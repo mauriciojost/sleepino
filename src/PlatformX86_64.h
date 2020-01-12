@@ -30,6 +30,10 @@ AppMode appMode = Interactive;
 // Callbacks
 ///////////////////
 
+float vcc() {
+  return 3.3; // not supported
+}
+
 const char *apiDeviceLogin() {
   return SIMULATOR_LOGIN;
 }

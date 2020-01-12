@@ -7,6 +7,7 @@
 #include <main4ino/Actor.h>
 
 #include <actors/SleepinoSettings.h>
+#include <actors/Battery.h>
 #include <mod4ino/Module.h>
 
 #define CLASS_MODULEB "MB"
@@ -32,6 +33,7 @@ private:
 
   // Actors
   SleepinoSettings *bsettings;
+  Battery *battery;
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
   void (*commandFunc)(const char *str);
@@ -42,8 +44,9 @@ public:
     module = new Module();
 
     bsettings = new SleepinoSettings("sleepino");
+    battery = new Battery("battery");
 
-    module->getActors()->add(1, (Actor *)bsettings);
+    module->getActors()->add(2, (Actor *)bsettings, (Actor *)battery);
 
     message = NULL;
     commandFunc = NULL;
@@ -68,7 +71,8 @@ public:
              const char *(*apiDeviceLoginFunc)(),
              const char *(*apiDevicePassFunc)(),
              void (*cmdFunc)(const char*),
-             Buffer *(*getLogBufferFunc)()
+             Buffer *(*getLogBufferFunc)(),
+             float (*vcc)()
   ) {
 
     module->setup(PROJECT_ID,
@@ -97,6 +101,7 @@ public:
     commandFunc = cmdFunc;
 
     bsettings->setup(commandFunc);
+    battery->setup(vcc);
   }
 
   ModuleStartupPropertiesCode startupProperties() {

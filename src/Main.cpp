@@ -65,7 +65,8 @@ void setup() {
            apiDeviceLogin,
            apiDevicePass,
            commandFunc,
-           getLogBuffer
+           getLogBuffer,
+           vcc
   );
   log(CLASS_MAIN, Info, "Startup properties...");
   ModuleStartupPropertiesCode s = m->startupProperties();

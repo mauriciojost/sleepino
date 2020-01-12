@@ -97,6 +97,9 @@ void configureModeArchitecture();
 // Abort execution (non-recoverable-error)
 void abort(const char *msg);
 
+// Get VCC measure in volts.
+float vcc();
+
 // Generic functions common to all architectures
 ///////////////////
 

@@ -77,6 +77,7 @@ EspSaveCrash espSaveCrash;
 
 ADC_MODE(ADC_VCC);
 
+float vcc();
 void bitmapToLcd(uint8_t bitmap[]);
 void reactCommandCustom();
 void heartbeat();
@@ -94,6 +95,10 @@ int lcdContrast();
 
 // Callbacks
 ///////////////////
+
+float vcc() {
+  return VCC_FLOAT;
+}
 
 const char *apiDeviceLogin() {
   return initializeTuningVariable(&apiDeviceId, DEVICE_ALIAS_FILENAME, DEVICE_ALIAS_MAX_LENGTH, NULL, false)->getBuffer();
