@@ -23,11 +23,13 @@
 #include <PlatformX86_64.h>
 #endif // ARDUINO
 
+#define WIFI_CONNECT_ATTEMPTS 10
+
 #define PROJECT_ID "sleepino"
 
 bool initWifiSimple() {
   Settings *s = m->getModuleSettings();
-  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, 3);
+  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, WIFI_CONNECT_ATTEMPTS);
   return connected;
 }
 
