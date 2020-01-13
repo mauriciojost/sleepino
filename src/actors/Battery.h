@@ -6,6 +6,10 @@
 
 #define CLASS_BATTERY "BY"
 
+#define VCC_MVOLTS_MIN_DEFAULT 100000
+#define VCC_MVOLTS_MAX_DEFAULT 0
+#define VCC_MVOLTS_NOW_DEFAULT 3300 // 3.3v
+
 enum BatteryProps {
   BatteryChargeProp = 0,        // integer, charge percentage
   BatteryVccNowProp,            // integer, measure of Vcc [mV]
@@ -31,9 +35,9 @@ public:
     md = new Metadata(n);
     md->getTiming()->setFreq("~10m");
     charge = 0;
-    vccmVoltsNow = 1;
-    vccmVoltsMin = 1;
-    vccmVoltsMax = 1;
+    vccmVoltsNow = VCC_MVOLTS_NOW_DEFAULT;
+    vccmVoltsMin = VCC_MVOLTS_MIN_DEFAULT;
+    vccmVoltsMax = VCC_MVOLTS_MAX_DEFAULT;
     vcc = NULL;
   }
 
