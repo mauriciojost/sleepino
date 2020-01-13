@@ -101,9 +101,9 @@ const char *apiDevicePass() {
 }
 
 void logLine(const char *str, const char *clz, LogLevel l) {
-  int ts = (int)(millis() % 10000);
+  int ts = (int)((millis()/1000) % 10000);
   Buffer aux(8);
-  aux.fill("%d|", ts);
+  aux.fill("%04d|", ts);
 
   Serial.print(ts);
   Serial.print('|');
