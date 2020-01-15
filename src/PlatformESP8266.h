@@ -78,7 +78,6 @@ EspSaveCrash espSaveCrash;
 ADC_MODE(ADC_VCC);
 
 float vcc();
-void bitmapToLcd(uint8_t bitmap[]);
 void reactCommandCustom();
 void heartbeat();
 bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs);
@@ -276,11 +275,8 @@ void runModeArchitecture() {
 
   messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
-  // other
   handleInterrupt();
-  if (m->getModuleSettings()->getDebug()) {
-    debugHandle();
-  }
+  debugHandle();
 
 }
 
@@ -367,6 +363,9 @@ void abort(const char *msg) {
 ////////////////////////////////////////
 
 void debugHandle() {
+  if (!m->getModuleSettings()->getDebug()) {
+    return;
+  }
   static bool firstTime = true;
   Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   if (firstTime) {
@@ -390,21 +389,6 @@ void debugHandle() {
 #ifdef OTA_ENABLED
   ArduinoOTA.handle(); // Handle on the air firmware load
 #endif // OTA_ENABLED
-}
-
-void bitmapToLcd(uint8_t bitmap[]) {
-  for (char yi = 0; yi < 8; yi++) {
-    for (char xi = 0; xi < 2; xi++) {
-      uint8_t imgbyte = bitmap[yi * 2 + xi];
-      for (char b = 0; b < 8; b++) {
-        uint8_t color = (imgbyte << b) & 0b10000000;
-        int16_t xl = (int16_t)xi * 64 + (int16_t)b * 8;
-        int16_t yl = (int16_t)yi * 8;
-        uint16_t cl = color == 0 ? BLACK : WHITE;
-        lcd->fillRect(xl, yl, 8, 8, cl);
-      }
-    }
-  }
 }
 
 void reactCommandCustom() { // for the use via telnet
