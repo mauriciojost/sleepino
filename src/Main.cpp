@@ -46,7 +46,7 @@ void updateFirmwareVersion(const char *targetVersion, const char *currentVersion
   }
 }
 
-#define MAX_SLEEP_CYCLE_SECS 60 // 1min
+#define MAX_SLEEP_CYCLE_SECS 1800 // 30min
 void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
   if (periodSecs <= MAX_SLEEP_CYCLE_SECS) {
     log(CLASS_MAIN, Debug, "Regular DS %d", periodSecs);
@@ -54,7 +54,7 @@ void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
     deepSleepNotInterruptable(now(), periodSecs);
   } else {
     int remaining = periodSecs - MAX_SLEEP_CYCLE_SECS;
-    log(CLASS_MAIN, Debug, "Ext. DS: %d(+%d)", MAX_SLEEP_CYCLE_SECS, remaining);
+    log(CLASS_MAIN, Debug, "EDS: %d(+%d rem.)", MAX_SLEEP_CYCLE_SECS, remaining);
     writeRemainingSecs(remaining);
     deepSleepNotInterruptable(now(), MAX_SLEEP_CYCLE_SECS);
   }
@@ -63,12 +63,16 @@ void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
 #define CYCLE_SECS 60
 void resumeDeepSleepIfApplicable() {
   int remainingSecs = readRemainingSecs();
-  if (remainingSecs > 0) {
-    log(CLASS_MAIN, Info, "EDS ongoing (%d remaining)", remainingSecs);
-    writeRemainingSecs(remainingSecs - CYCLE_SECS);
-    deepSleepNotInterruptable(now(), CYCLE_SECS);
+  if (remainingSecs > MAX_SLEEP_CYCLE_SECS) {
+    log(CLASS_MAIN, Info, "EDS ongoing %d(+%d remaining)", MAX_SLEEP_CYCLE_SECS, remainingSecs);
+    writeRemainingSecs(remainingSecs - MAX_SLEEP_CYCLE_SECS);
+    deepSleepNotInterruptable(now(), MAX_SLEEP_CYCLE_SECS);
+  } else if (remainingSecs > 0) {
+    log(CLASS_MAIN, Info, "EDS ongoing %d (+0 remaining)", remainingSecs);
+    writeRemainingSecs(0);
+    deepSleepNotInterruptable(now(), remainingSecs);
   } else {
-    log(CLASS_MAIN, Warn, "No EDS ongoing");
+    log(CLASS_MAIN, Info, "No EDS ongoing");
   }
 }
 
