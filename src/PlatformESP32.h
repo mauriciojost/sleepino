@@ -333,6 +333,15 @@ void abort(const char *msg) {
   }
 }
 
+int readRemainingSecs() {
+  return -1; // not supported
+}
+
+void writeRemainingSecs(int s) {
+  return; // not supported
+}
+
+
 ////////////////////////////////////////
 // Architecture specific functions
 ////////////////////////////////////////

@@ -46,6 +46,33 @@ void updateFirmwareVersion(const char *targetVersion, const char *currentVersion
   }
 }
 
+#define MAX_SLEEP_CYCLE_SECS 60 // 1min
+void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
+  if (periodSecs <= MAX_SLEEP_CYCLE_SECS) {
+    log(CLASS_MAIN, Debug, "Regular DS %d", periodSecs);
+    writeRemainingSecs(0); // clean RTC for next boot
+    deepSleepNotInterruptable(now(), periodSecs);
+  } else {
+    int remaining = periodSecs - MAX_SLEEP_CYCLE_SECS;
+    log(CLASS_MAIN, Debug, "Ext. DS: %d(+%d)", MAX_SLEEP_CYCLE_SECS, remaining);
+    writeRemainingSecs(remaining);
+    deepSleepNotInterruptable(now(), MAX_SLEEP_CYCLE_SECS);
+  }
+}
+
+#define CYCLE_SECS 60
+void resumeDeepSleepIfApplicable() {
+  int remainingSecs = readRemainingSecs();
+  if (remainingSecs > 0) {
+    log(CLASS_MAIN, Info, "EDS ongoing (%d remaining)", remainingSecs);
+    writeRemainingSecs(remainingSecs - CYCLE_SECS);
+    deepSleepNotInterruptable(now(), CYCLE_SECS);
+  } else {
+    log(CLASS_MAIN, Warn, "No EDS ongoing");
+  }
+}
+
+
 void setup() {
   m = new ModuleSleepino();
   m->setup(setupArchitecture,
@@ -57,7 +84,7 @@ void setup() {
            readFile,
            writeFile,
            sleepInterruptable,
-           deepSleepNotInterruptable,
+           deepSleepNotInterruptableCustom,
            configureModeArchitecture,
            runModeArchitecture,
            commandArchitecture,
@@ -70,6 +97,9 @@ void setup() {
            getLogBuffer,
            vcc
   );
+
+  log(CLASS_MAIN, Info, "Resume DS...");
+  resumeDeepSleepIfApplicable();
   log(CLASS_MAIN, Info, "Startup properties...");
   ModuleStartupPropertiesCode s = m->startupProperties();
   if (s != ModuleStartupPropertiesCodeSuccess && s != ModuleStartupPropertiesCodeSkipped) {

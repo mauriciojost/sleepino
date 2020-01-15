@@ -37,6 +37,8 @@ private:
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
   void (*commandFunc)(const char *str);
+  void (*deepSleepNotInterruptable)(time_t cycleBegin, time_t periodSec);
+
 
 public:
   ModuleSleepino() {
@@ -50,6 +52,7 @@ public:
 
     message = NULL;
     commandFunc = NULL;
+    deepSleepNotInterruptable = NULL;
   }
 
   void setup(BotMode (*setupArchitectureFunc)(),
@@ -74,6 +77,11 @@ public:
              Buffer *(*getLogBufferFunc)(),
              float (*vcc)()
   ) {
+    deepSleepNotInterruptable = deepSleepNotInterruptableFunc;
+    message = messageFunc;
+    commandFunc = cmdFunc;
+    bsettings->setup(commandFunc);
+    battery->setup(vcc);
 
     module->setup(PROJECT_ID,
                   PLATFORM_ID,
@@ -97,11 +105,6 @@ public:
                   alwaysTrue,
                   getLogBufferFunc);
 
-    message = messageFunc;
-    commandFunc = cmdFunc;
-
-    bsettings->setup(commandFunc);
-    battery->setup(vcc);
   }
 
   ModuleStartupPropertiesCode startupProperties() {

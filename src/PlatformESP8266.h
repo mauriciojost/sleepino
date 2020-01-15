@@ -358,6 +358,26 @@ void abort(const char *msg) {
   }
 }
 
+#define USER_RTC_OFFSET 64
+int readRemainingSecs() {
+  //from 256 is user mem
+  int s;
+  bool res = system_rtc_mem_read(USER_RTC_OFFSET, &s, sizeof(int));
+  if (res) {
+    return s;
+  } else {
+    log(CLASS_MAIN, Debug, "No ds remaining");
+    return -1;
+  }
+}
+
+void writeRemainingSecs(int s) {
+  bool res = system_rtc_mem_write(USER_RTC_OFFSET, &s, sizeof(int));
+  if (!res) {
+    log(CLASS_MAIN, Warn, "Failed to write remaining");
+  }
+}
+
 ////////////////////////////////////////
 // Architecture specific functions
 ////////////////////////////////////////

@@ -97,6 +97,12 @@ void configureModeArchitecture();
 // Abort execution (non-recoverable-error)
 void abort(const char *msg);
 
+// Read amount of seconds missing in deep sleep.
+int readRemainingSecs();
+
+// Write amount of seconds missing in deep sleep.
+void writeRemainingSecs(int s);
+
 // Get VCC measure in volts.
 float vcc();
 
