@@ -46,8 +46,7 @@ void updateFirmwareVersion(const char *targetVersion, const char *currentVersion
   }
 }
 
-//#define MAX_SLEEP_CYCLE_SECS 1800 // 30min
-#define MAX_SLEEP_CYCLE_SECS 180 // 3min
+#define MAX_SLEEP_CYCLE_SECS 1800 // 30min
 void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
   if (periodSecs <= MAX_SLEEP_CYCLE_SECS) {
     log(CLASS_MAIN, Debug, "Regular DS %d", periodSecs);
