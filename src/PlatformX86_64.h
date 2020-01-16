@@ -30,6 +30,14 @@ AppMode appMode = Interactive;
 // Callbacks
 ///////////////////
 
+int readRemainingSecs() {
+  return -1; // not supported
+}
+
+void writeRemainingSecs(int s) {
+  return; // not supported
+}
+
 float vcc() {
   return 3.3; // not supported
 }
