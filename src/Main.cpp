@@ -60,7 +60,7 @@ void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
   }
 }
 
-void resumeDeepSleepIfApplicable() {
+void resumeExtendedDeepSleepIfApplicable() {
   int remainingSecs = readRemainingSecs();
   if (remainingSecs > MAX_SLEEP_CYCLE_SECS) {
     log(CLASS_MAIN, Info, "EDS ongoing %d(+%d remaining)", MAX_SLEEP_CYCLE_SECS, remainingSecs);
@@ -102,7 +102,7 @@ void setup() {
   );
 
   log(CLASS_MAIN, Info, "Resume DS...");
-  resumeDeepSleepIfApplicable();
+  resumeExtendedDeepSleepIfApplicable();
   log(CLASS_MAIN, Info, "Startup properties...");
   ModuleStartupPropertiesCode s = m->startupProperties();
   if (s != ModuleStartupPropertiesCodeSuccess && s != ModuleStartupPropertiesCodeSkipped) {
