@@ -213,8 +213,6 @@ BotMode setupArchitecture() {
   lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
-  messageFunc(0, 0, 1, false, FullClear, 1, "booting...");
-
   heartbeat();
 
   log(CLASS_MAIN, Debug, "Setup wdt");
