@@ -19,6 +19,9 @@
 
 -D LOG_LEVEL=2
 -D YES_DEBUG
+# As per experience, this is a good empirical value
+# less than this and the device wakes up too early, triggering no actor
+-D FACTOR_USEC_TO_SEC_DEEP_SLEEP=1050000L
 
 #-D UNIT_TEST
 
