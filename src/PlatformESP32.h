@@ -205,7 +205,6 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
-  lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
   heartbeat();

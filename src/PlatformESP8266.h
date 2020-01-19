@@ -210,7 +210,6 @@ BotMode setupArchitecture() {
   log(CLASS_MAIN, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
-  lcd->clearDisplay();
   delay(DELAY_MS_SPI);
 
   heartbeat();
@@ -239,13 +238,15 @@ BotMode setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Clean up crashes");
   if (espSaveCrash.count() > 5) {
+    log(CLASS_MAIN, Warn, "Crashes: $d");
     log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
     espSaveCrash.clear();
   } else if (espSaveCrash.count() > 0) {
-    log(CLASS_MAIN, Warn, "Stack-trcs (!!!)");
+    log(CLASS_MAIN, Warn, "Crashes: $d");
     espSaveCrash.print();
+  } else {
+    log(CLASS_MAIN, Debug, "No crashes");
   }
 
   log(CLASS_MAIN, Debug, "Letting user interrupt...");
