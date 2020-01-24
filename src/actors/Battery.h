@@ -11,7 +11,7 @@
 #define VCC_MVOLTS_NOW_DEFAULT 3300 // 3.3v
 
 enum BatteryProps {
-  BatteryChargeProp = 0,        // integer, charge percentage
+  BatteryChargeProp = 0,        // float, charge percentage
   BatteryVccNowProp,            // integer, measure of Vcc [mV]
   BatteryVccMaxProp,            // integer, maximum measure of Vcc [mV]
   BatteryVccMinProp,            // integer, minimum measure of Vcc [mV]
@@ -23,7 +23,7 @@ class Battery : public Actor {
 private:
   const char *name;
   Metadata *md;
-  int charge;
+  float charge;
   int vccmVoltsNow;
   int vccmVoltsMin;
   int vccmVoltsMax;
@@ -34,7 +34,7 @@ public:
     name = n;
     md = new Metadata(n);
     md->getTiming()->setFreq("~10m");
-    charge = 0;
+    charge = 0.0;
     vccmVoltsNow = VCC_MVOLTS_NOW_DEFAULT;
     vccmVoltsMin = VCC_MVOLTS_MIN_DEFAULT;
     vccmVoltsMax = VCC_MVOLTS_MAX_DEFAULT;
@@ -88,7 +88,7 @@ public:
   void getSetPropValue(int propIndex, GetSetMode m, const Value *targetValue, Value *actualValue) {
     switch (propIndex) {
       case (BatteryChargeProp):
-        setPropInteger(m, targetValue, actualValue, &charge);
+        setPropFloat(m, targetValue, actualValue, &charge);
         break;
       case (BatteryVccNowProp):
         setPropInteger(m, targetValue, actualValue, &vccmVoltsNow);
