@@ -62,7 +62,7 @@ public:
         vccmVoltsMin = MINIM(vccmVoltsNow, vccmVoltsMin);
         vccmVoltsMax = MAXIM(vccmVoltsNow, vccmVoltsMax);
         charge = ((float)(vccmVoltsNow - vccmVoltsMin) / (vccmVoltsMax - vccmVoltsMin)) * 100 ;
-        log(CLASS_BATTERY, Debug, "[mvnow=%d <= mvmin=%d <= mvmax=%d]", vccmVoltsMin, vccmVoltsNow, vccmVoltsMax);
+        log(CLASS_BATTERY, Debug, "[mvmin=%d <= mvnow=%d <= mvmax=%d]", vccmVoltsMin, vccmVoltsNow, vccmVoltsMax);
         getMetadata()->changed();
       } else {
         log(CLASS_BATTERY, Warn, "No init!");
