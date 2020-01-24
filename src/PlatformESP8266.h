@@ -166,15 +166,15 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int
   lcd->setCursor(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT);
   lcd->print(str);
   lcd->display();
-  log(CLASS_MAIN, Debug, "Msg(%d,%d):%s", x, y, str);
+  log(CLASS_PLATFORM, Debug, "Msg(%d,%d):%s", x, y, str);
   delay(DELAY_MS_SPI);
 }
 
 void clearDevice() {
-  log(CLASS_MAIN, User, "   rm %s", DEVICE_ALIAS_FILENAME);
-  log(CLASS_MAIN, User, "   rm %s", DEVICE_PWD_FILENAME);
-  log(CLASS_MAIN, User, "   ls");
-  log(CLASS_MAIN, User, "   <remove all .properties>");
+  log(CLASS_PLATFORM, User, "   rm %s", DEVICE_ALIAS_FILENAME);
+  log(CLASS_PLATFORM, User, "   rm %s", DEVICE_PWD_FILENAME);
+  log(CLASS_PLATFORM, User, "   ls");
+  log(CLASS_PLATFORM, User, "   <remove all .properties>");
   espSaveCrash.clear();
 }
 
@@ -195,40 +195,40 @@ BotMode setupArchitecture() {
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
   setLogLevel(Info);
-  log(CLASS_MAIN, Info, "Log initialized");
+  log(CLASS_PLATFORM, Info, "Log initialized");
 
-  log(CLASS_MAIN, Debug, "Setup cmds");
+  log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
 
-  log(CLASS_MAIN, Debug, "Setup timing");
+  log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
 
 
-  log(CLASS_MAIN, Debug, "Setup LCD");
+  log(CLASS_PLATFORM, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
   delay(DELAY_MS_SPI);
 
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup wdt");
+  log(CLASS_PLATFORM, Debug, "Setup wdt");
   ESP.wdtEnable(1); // argument not used
 
-  log(CLASS_MAIN, Debug, "Setup wifi");
+  log(CLASS_PLATFORM, Debug, "Setup wifi");
   WiFi.persistent(false);
   WiFi.hostname(apiDeviceLogin());
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup http");
+  log(CLASS_PLATFORM, Debug, "Setup http");
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup random");
+  log(CLASS_PLATFORM, Debug, "Setup random");
   randomSeed(analogRead(0) * 256 + analogRead(0));
   heartbeat();
 
-  log(CLASS_MAIN, Debug, "Setup commands");
+  log(CLASS_PLATFORM, Debug, "Setup commands");
 #ifdef TELNET_ENABLED
   telnet.setCallBackProjectCmds(reactCommandCustom);
   String helpCli("Type 'help' for help");
@@ -237,23 +237,23 @@ BotMode setupArchitecture() {
   heartbeat();
 
   if (espSaveCrash.count() > 5) {
-    log(CLASS_MAIN, Warn, "Crshs:%d", espSaveCrash.count());
-    log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
+    log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
+    log(CLASS_PLATFORM, Warn, "Too many Stack-trcs / clearing (!!!)");
     espSaveCrash.clear();
   } else if (espSaveCrash.count() > 0) {
-    log(CLASS_MAIN, Warn, "Crshs:%d", espSaveCrash.count());
+    log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
     espSaveCrash.print();
   } else {
-    log(CLASS_MAIN, Debug, "No crashes");
+    log(CLASS_PLATFORM, Debug, "No crashes");
   }
 
-  log(CLASS_MAIN, Debug, "Letting user interrupt...");
+  log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
-    log(CLASS_MAIN, Info, "Arch. setup OK => configure mode");
+    log(CLASS_PLATFORM, Info, "Arch. setup OK => configure mode");
     return ConfigureMode;
   } else {
-    log(CLASS_MAIN, Info, "Arch. setup OK => run mode");
+    log(CLASS_PLATFORM, Info, "Arch. setup OK => run mode");
     return RunMode;
   }
 
@@ -279,23 +279,23 @@ void runModeArchitecture() {
 
 CmdExecStatus commandArchitecture(const char *c) {
   if (strcmp("init", c) == 0) {
-    logRaw(CLASS_MAIN, User, "-> Initialize");
-    logRaw(CLASS_MAIN, User, "Execute:");
-    logRaw(CLASS_MAIN, User, "   ls");
-    log(CLASS_MAIN, User, "   save %s <alias>", DEVICE_ALIAS_FILENAME);
-    log(CLASS_MAIN, User, "   save %s <pwd>", DEVICE_PWD_FILENAME);
-    logRaw(CLASS_MAIN, User, "   wifissid <ssid>");
-    logRaw(CLASS_MAIN, User, "   wifipass <password>");
-    log(CLASS_MAIN, User, "   save %s <contrast-0-100>", DEVICE_CONTRAST_FILENAME);
-    logRaw(CLASS_MAIN, User, "   (setup of power consumption settings architecture specific if any)");
-    logRaw(CLASS_MAIN, User, "   store");
-    logRaw(CLASS_MAIN, User, "   ls");
+    logRaw(CLASS_PLATFORM, User, "-> Initialize");
+    logRaw(CLASS_PLATFORM, User, "Execute:");
+    logRaw(CLASS_PLATFORM, User, "   ls");
+    log(CLASS_PLATFORM, User, "   save %s <alias>", DEVICE_ALIAS_FILENAME);
+    log(CLASS_PLATFORM, User, "   save %s <pwd>", DEVICE_PWD_FILENAME);
+    logRaw(CLASS_PLATFORM, User, "   wifissid <ssid>");
+    logRaw(CLASS_PLATFORM, User, "   wifipass <password>");
+    log(CLASS_PLATFORM, User, "   save %s <contrast-0-100>", DEVICE_CONTRAST_FILENAME);
+    logRaw(CLASS_PLATFORM, User, "   (setup of power consumption settings architecture specific if any)");
+    logRaw(CLASS_PLATFORM, User, "   store");
+    logRaw(CLASS_PLATFORM, User, "   ls");
     return Executed;
   } else if (strcmp("ls", c) == 0) {
     SPIFFS.begin();
     Dir dir = SPIFFS.openDir("/");
     while (dir.next()) {
-      log(CLASS_MAIN, User, "- %s (%d bytes)", dir.fileName().c_str(), (int)dir.fileSize());
+      log(CLASS_PLATFORM, User, "- %s (%d bytes)", dir.fileName().c_str(), (int)dir.fileSize());
     }
     SPIFFS.end();
     return Executed;
@@ -303,13 +303,13 @@ CmdExecStatus commandArchitecture(const char *c) {
     const char *f = strtok(NULL, " ");
     SPIFFS.begin();
     bool succ = SPIFFS.remove(f);
-    log(CLASS_MAIN, User, "### File '%s' %s removed", f, (succ ? "" : "NOT"));
+    log(CLASS_PLATFORM, User, "### File '%s' %s removed", f, (succ ? "" : "NOT"));
     SPIFFS.end();
     return Executed;
   } else if (strcmp("lcdcont", c) == 0) {
     const char *c = strtok(NULL, " ");
     int i = atoi(c);
-    log(CLASS_MAIN, User, "Set contrast to: %d", i);
+    log(CLASS_PLATFORM, User, "Set contrast to: %d", i);
     lcd->setContrast(i);
     return Executed;
   } else if (strcmp("reset", c) == 0) {
@@ -318,7 +318,7 @@ CmdExecStatus commandArchitecture(const char *c) {
   } else if (strcmp("freq", c) == 0) {
     uint8 fmhz = (uint8)atoi(strtok(NULL, " "));
     bool succ = system_update_cpu_freq(fmhz);
-    log(CLASS_MAIN, User, "Freq updated: %dMHz (succ %s)", (int)fmhz, BOOL(succ));
+    log(CLASS_PLATFORM, User, "Freq updated: %dMHz (succ %s)", (int)fmhz, BOOL(succ));
     return Executed;
   } else if (strcmp("deepsleep", c) == 0) {
     int s = atoi(strtok(NULL, " "));
@@ -331,7 +331,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     espSaveCrash.clear();
     return Executed;
   } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
-    logRaw(CLASS_MAIN, User, HELP_COMMAND_ARCH_CLI);
+    logRaw(CLASS_PLATFORM, User, HELP_COMMAND_ARCH_CLI);
     return Executed;
   } else {
     return NotFound;
@@ -344,14 +344,14 @@ void configureModeArchitecture() {
 }
 
 void abort(const char *msg) {
-  log(CLASS_MAIN, Error, "Abort: %s", msg);
-  log(CLASS_MAIN, Warn, "Will deep sleep upon abort...");
+  log(CLASS_PLATFORM, Error, "Abort: %s", msg);
+  log(CLASS_PLATFORM, Warn, "Will deep sleep upon abort...");
   bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
   if (!inte) {
     deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
   } else {
     m->getBot()->setMode(ConfigureMode);
-    log(CLASS_MAIN, Warn, "Abort skipped");
+    log(CLASS_PLATFORM, Warn, "Abort skipped");
   }
 }
 
@@ -363,7 +363,7 @@ int readRemainingSecs() {
   if (res) {
     return s;
   } else {
-    log(CLASS_MAIN, Debug, "No ds remaining");
+    log(CLASS_PLATFORM, Debug, "No ds remaining");
     return -1;
   }
 }
@@ -371,7 +371,7 @@ int readRemainingSecs() {
 void writeRemainingSecs(int s) {
   bool res = system_rtc_mem_write(USER_RTC_OFFSET, &s, sizeof(int));
   if (!res) {
-    log(CLASS_MAIN, Warn, "Failed to write remaining");
+    log(CLASS_PLATFORM, Warn, "Failed to write remaining");
   }
 }
 
@@ -386,7 +386,7 @@ void debugHandle() {
   static bool firstTime = true;
   Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
   if (firstTime) {
-    log(CLASS_MAIN, Debug, "Initialize debuggers...");
+    log(CLASS_PLATFORM, Debug, "Initialize debuggers...");
 #ifdef TELNET_ENABLED
     telnet.begin(apiDeviceLogin()); // Intialize the remote logging framework
 #endif // TELNET_ENABLED
@@ -426,21 +426,21 @@ void handleInterrupt() {
       size_t n = Serial.readBytes(&c, 1);
 
       if (c == 0x08 && n == 1) { // backspace
-        log(CLASS_MAIN, Debug, "Backspace");
+        log(CLASS_PLATFORM, Debug, "Backspace");
         if (cmdBuffer->getLength() > 0) {
           cmdBuffer->getUnsafeBuffer()[cmdBuffer->getLength() - 1] = 0;
         }
       } else if (c == 0x1b && n == 1) { // up/down
-        log(CLASS_MAIN, Debug, "Up/down");
+        log(CLASS_PLATFORM, Debug, "Up/down");
         cmdBuffer->load(cmdLast->getBuffer());
       } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
-        log(CLASS_MAIN, Debug, "Enter");
+        log(CLASS_PLATFORM, Debug, "Enter");
         if (cmdBuffer->getLength() > 0) {
           CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
           bool interrupt = (execStatus == ExecutedInterrupt);
-          log(CLASS_MAIN, Debug, "Interrupt: %d", interrupt);
-          log(CLASS_MAIN, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
-          log(CLASS_MAIN, User, "('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
+          log(CLASS_PLATFORM, Debug, "Interrupt: %d", interrupt);
+          log(CLASS_PLATFORM, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
+          log(CLASS_PLATFORM, User, "('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
           cmdLast->load(cmdBuffer->getBuffer());
           cmdBuffer->clear();
         }
@@ -449,24 +449,24 @@ void handleInterrupt() {
         cmdBuffer->append(c);
       }
       // echo
-      log(CLASS_MAIN, User, "> %s (%d)", cmdBuffer->getBuffer(), (int)c);
+      log(CLASS_PLATFORM, User, "> %s (%d)", cmdBuffer->getBuffer(), (int)c);
       while (!Serial.available() && inLoop < USER_INTERACTION_LOOPS_MAX) {
         inLoop++;
         delay(100);
       }
       if (inLoop >= USER_INTERACTION_LOOPS_MAX) {
-        log(CLASS_MAIN, User, "> (timeout)");
+        log(CLASS_PLATFORM, User, "> (timeout)");
         break;
       }
     }
-    log(CLASS_MAIN, Debug, "Done with interrupt");
+    log(CLASS_PLATFORM, Debug, "Done with interrupt");
 
   }
 }
 
 bool haveToInterrupt() {
   if (Serial.available()) {
-    log(CLASS_MAIN, Debug, "Serial pinged: int");
+    log(CLASS_PLATFORM, Debug, "Serial pinged: int");
     return true;
   } else {
     return false;

@@ -59,7 +59,7 @@ void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clear, int siz
 }
 
 void clearDevice() {
-  log(CLASS_MAIN, Debug, "Clear device");
+  log(CLASS_PLATFORM, Debug, "Clear device");
 }
 
 
@@ -78,7 +78,7 @@ bool haveToInterrupt() {
 }
 
 BotMode setupArchitecture() {
-  log(CLASS_MAIN, Debug, "Setup timing");
+  log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
   return RunMode;
 }
@@ -106,7 +106,7 @@ void configureModeArchitecture() {
 }
 
 void abort(const char *msg) {
-  log(CLASS_MAIN, Error, "Abort: %s", msg);
+  log(CLASS_PLATFORM, Error, "Abort: %s", msg);
 }
 
 ////////////////////////////////////////
@@ -129,15 +129,15 @@ int main(int argc, const char *argv[]) {
     appMode = (AppMode)atoi(argv[1]);
     simulationSteps = atoi(argv[2]);
   } else if (argc != 1 + 2) {
-    log(CLASS_MAIN, Error, "2 args max: <starter> [appMode [steps]]");
+    log(CLASS_PLATFORM, Error, "2 args max: <starter> [appMode [steps]]");
     return -1;
   }
 
   for (int i = 0; i < simulationSteps; i++) {
-    log(CLASS_MAIN, Debug, "### Step %d/%d", i, simulationSteps);
+    log(CLASS_PLATFORM, Debug, "### Step %d/%d", i, simulationSteps);
     loop();
   }
-  log(CLASS_MAIN, Debug, "### DONE");
+  log(CLASS_PLATFORM, Debug, "### DONE");
   return 0;
 }
 bool inDeepSleepMode() {

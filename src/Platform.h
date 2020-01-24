@@ -1,6 +1,8 @@
 #ifndef PLATFORM_INC
 #define PLATFORM_INC
 
+#include <Constants.h>
+
 /**
  * This file contains common-to-any-platform declarations or functions:
  * - implementation of entry points for arduino programs (setup and loop functions)
@@ -12,6 +14,8 @@
 
 #define CLASS_PLATFORM "PL"
 
+#define WIFI_CONNECTION_RETRIES 12
+
 #ifndef HTTP_TIMEOUT_MS
 #define HTTP_TIMEOUT_MS 10000
 #endif // HTTP_TIMEOUT_MS
@@ -20,13 +24,12 @@
 #define USER_INTERACTION_LOOPS_MAX 40
 #endif // USER_INTERACTION_LOOPS_MAX
 
-#define WIFI_CONNECT_ATTEMPTS 10
 
 Buffer *logBuffer = NULL;
 ModuleSleepino *m = NULL;
 
 //////////////////////////////////////////////////////////////
-// To be provided by the Main of a specific architecture
+// To be provided by the specific Platform (ESPXXX, X86, ...)
 //////////////////////////////////////////////////////////////
 
 // Callbacks
@@ -111,6 +114,13 @@ float vcc();
 // Generic functions common to all architectures
 ///////////////////
 
+bool initWifiSimple() {
+  Settings *s = m->getModuleSettings();
+  log(CLASS_PLATFORM, Info, "W.steady");
+  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, WIFI_CONNECTION_RETRIES);
+  return connected;
+}
+
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
 	bool first = false;
   if (*var == NULL) {
@@ -157,12 +167,6 @@ Buffer *getLogBuffer() {
 
 #endif // ARDUINO
 
-bool initWifiSimple() {
-  Settings *s = m->getModuleSettings();
-  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, WIFI_CONNECT_ATTEMPTS);
-  return connected;
-}
-
 void commandFunc(const char* c) {
   m->command(c);
 }
@@ -172,19 +176,19 @@ void updateFirmwareVersion(const char *targetVersion, const char *currentVersion
   if (c) {
     updateFirmwareFromMain4ino(m->getModule()->getPropSync()->getSession(), apiDeviceLogin(), PROJECT_ID, PLATFORM_ID, targetVersion, currentVersion);
   } else {
-    log(CLASS_MAIN, Error, "Could not update");
+    log(CLASS_PLATFORM, Error, "Could not update");
   }
 }
 
 #define MAX_SLEEP_CYCLE_SECS 1800 // 30min
 void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
   if (periodSecs <= MAX_SLEEP_CYCLE_SECS) {
-    log(CLASS_MAIN, Debug, "Regular DS %d", periodSecs);
+    log(CLASS_PLATFORM, Debug, "Regular DS %d", periodSecs);
     writeRemainingSecs(0); // clean RTC for next boot
     deepSleepNotInterruptable(now(), periodSecs);
   } else {
     int remaining = periodSecs - MAX_SLEEP_CYCLE_SECS;
-    log(CLASS_MAIN, Debug, "EDS: %d(+%d rem.)", MAX_SLEEP_CYCLE_SECS, remaining);
+    log(CLASS_PLATFORM, Debug, "EDS: %d(+%d rem.)", MAX_SLEEP_CYCLE_SECS, remaining);
     writeRemainingSecs(remaining);
     deepSleepNotInterruptable(now(), MAX_SLEEP_CYCLE_SECS);
   }
@@ -193,15 +197,15 @@ void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
 void resumeExtendedDeepSleepIfApplicable() {
   int remainingSecs = readRemainingSecs();
   if (remainingSecs > MAX_SLEEP_CYCLE_SECS) {
-    log(CLASS_MAIN, Info, "EDS ongoing %d(+%d remaining)", MAX_SLEEP_CYCLE_SECS, remainingSecs);
+    log(CLASS_PLATFORM, Info, "EDS ongoing %d(+%d remaining)", MAX_SLEEP_CYCLE_SECS, remainingSecs);
     writeRemainingSecs(remainingSecs - MAX_SLEEP_CYCLE_SECS);
     deepSleepNotInterruptable(now(), MAX_SLEEP_CYCLE_SECS);
   } else if (remainingSecs > 0) {
-    log(CLASS_MAIN, Info, "EDS ongoing %d (+0 remaining)", remainingSecs);
+    log(CLASS_PLATFORM, Info, "EDS ongoing %d (+0 remaining)", remainingSecs);
     writeRemainingSecs(0);
     deepSleepNotInterruptable(now(), remainingSecs);
   } else {
-    log(CLASS_MAIN, Info, "No EDS ongoing");
+    log(CLASS_PLATFORM, Info, "No EDS ongoing");
   }
 }
 
