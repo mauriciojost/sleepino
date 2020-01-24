@@ -10,7 +10,6 @@
 #include <HTTPUpdate.h>
 //#include <EspSaveCrash.h> // not supported for ESP32
 #include <FS.h>
-#include <Main.h>
 #include <Pinout.h>
 #ifdef TELNET_ENABLED
 #include <RemoteDebug.h>
@@ -100,9 +99,6 @@ const char *apiDevicePass() {
 }
 
 void logLine(const char *str, const char *clz, LogLevel l) {
-  if (m == NULL) {
-    return;
-  }
   int ts = (int)((millis()/1000) % 10000);
   Buffer aux(8);
   aux.fill("%04d|", ts);
@@ -110,6 +106,9 @@ void logLine(const char *str, const char *clz, LogLevel l) {
   Serial.print(ts);
   Serial.print('|');
   Serial.print(str);
+  if (m == NULL) {
+    return;
+  }
 #ifdef TELNET_ENABLED
   // telnet print
   if (telnet.isActive()) {
@@ -177,10 +176,6 @@ void testArchitecture() {}
 
 // Execution
 ///////////////////
-
-bool sleepInterruptable(time_t cycleBegin, time_t periodSecs) {
-  return lightSleepInterruptable(cycleBegin, periodSecs, m->getModuleSettings()->miniPeriodMsec(), haveToInterrupt, heartbeat);
-}
 
 BotMode setupArchitecture() {
 
