@@ -53,7 +53,7 @@ public:
     commandFunc = NULL;
   }
 
-  void setup(BotMode (*setupArchitectureFunc)(),
+  void setup(
              void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str),
              bool (*initWifiFunc)(),
              void (*stopWifiFunc)(),
@@ -82,7 +82,6 @@ public:
 
     module->setup(PROJECT_ID,
                   PLATFORM_ID,
-                  setupArchitectureFunc,
                   initWifiFunc,
                   stopWifiFunc,
                   httpMethodFunc,

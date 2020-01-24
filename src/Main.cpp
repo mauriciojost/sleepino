@@ -77,9 +77,9 @@ void resumeExtendedDeepSleepIfApplicable() {
 
 
 void setup() {
+  BotMode mode = setupArchitecture();
   m = new ModuleSleepino();
-  m->setup(setupArchitecture,
-           messageFunc,
+  m->setup(messageFunc,
            initWifiSimple,
            stopWifi,
            httpMethod,
@@ -100,6 +100,7 @@ void setup() {
            getLogBuffer,
            vcc
   );
+  m->getBot()->setMode(mode);
 
   log(CLASS_MAIN, Info, "Resume DS...");
   resumeExtendedDeepSleepIfApplicable();
@@ -119,3 +120,4 @@ void setup() {
 void loop() {
   m->loop();
 }
+

@@ -108,6 +108,9 @@ const char *apiDevicePass() {
 }
 
 void logLine(const char *str, const char *clz, LogLevel l) {
+  if (m == NULL) {
+    return;
+  }
   int ts = (int)((millis()/1000) % 10000);
   Buffer aux(8);
   aux.fill("%04d|", ts);
@@ -239,11 +242,11 @@ BotMode setupArchitecture() {
   heartbeat();
 
   if (espSaveCrash.count() > 5) {
-    log(CLASS_MAIN, Warn, "Crashes: $d");
+    log(CLASS_MAIN, Warn, "Crshs:$d");
     log(CLASS_MAIN, Warn, "Too many Stack-trcs / clearing (!!!)");
     espSaveCrash.clear();
   } else if (espSaveCrash.count() > 0) {
-    log(CLASS_MAIN, Warn, "Crashes: $d");
+    log(CLASS_MAIN, Warn, "Crshs:$d");
     espSaveCrash.print();
   } else {
     log(CLASS_MAIN, Debug, "No crashes");

@@ -100,6 +100,9 @@ const char *apiDevicePass() {
 }
 
 void logLine(const char *str, const char *clz, LogLevel l) {
+  if (m == NULL) {
+    return;
+  }
   int ts = (int)((millis()/1000) % 10000);
   Buffer aux(8);
   aux.fill("%04d|", ts);
