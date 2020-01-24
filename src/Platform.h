@@ -114,13 +114,6 @@ float vcc();
 // Generic functions common to all architectures
 ///////////////////
 
-bool initWifiSimple() {
-  Settings *s = m->getModuleSettings();
-  log(CLASS_PLATFORM, Info, "W.steady");
-  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, WIFI_CONNECTION_RETRIES);
-  return connected;
-}
-
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
 	bool first = false;
   if (*var == NULL) {
@@ -166,6 +159,14 @@ Buffer *getLogBuffer() {
 #include <PlatformX86_64.h>
 
 #endif // ARDUINO
+
+bool initWifiSimple() {
+  Settings *s = m->getModuleSettings();
+  log(CLASS_PLATFORM, Info, "W.steady");
+  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, WIFI_CONNECTION_RETRIES);
+  return connected;
+}
+
 
 void commandFunc(const char* c) {
   m->command(c);
