@@ -224,10 +224,6 @@ BotMode setupArchitecture() {
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
   heartbeat();
 
-  log(CLASS_PLATFORM, Debug, "Setup random");
-  randomSeed(analogRead(0) * 256 + analogRead(0));
-  heartbeat();
-
   log(CLASS_PLATFORM, Debug, "Setup commands");
 #ifdef TELNET_ENABLED
   telnet.setCallBackProjectCmds(reactCommandCustom);
