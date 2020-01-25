@@ -17,7 +17,11 @@
 
 
 void setup() {
+  log(CLASS_MAIN, Info, "Resume DS...");
+  resumeExtendedDeepSleepIfApplicable();
+
   BotMode mode = setupArchitecture();
+
   m = new ModuleSleepino();
   m->setup(messageFunc,
            initWifiSimple,
@@ -42,8 +46,6 @@ void setup() {
   );
   m->getBot()->setMode(mode);
 
-  log(CLASS_MAIN, Info, "Resume DS...");
-  resumeExtendedDeepSleepIfApplicable();
   log(CLASS_MAIN, Info, "Startup properties...");
   ModuleStartupPropertiesCode s = m->startupProperties();
   if (s != ModuleStartupPropertiesCodeSuccess && s != ModuleStartupPropertiesCodeSkipped) {
