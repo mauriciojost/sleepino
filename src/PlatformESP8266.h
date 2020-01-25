@@ -18,6 +18,8 @@
 #include <Wire.h>
 #include <primitives/BoardESP8266.h>
 
+#define MAX_SLEEP_CYCLE_SECS 1800 // 30min
+
 #define DELAY_MS_SPI 1
 #define HW_STARTUP_DELAY_MSECS 10
 
@@ -243,13 +245,13 @@ BotMode setupArchitecture() {
     log(CLASS_PLATFORM, Debug, "No crashes");
   }
 
-  log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
+  log(CLASS_PLATFORM, Debug, "Wait user...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
-    log(CLASS_PLATFORM, Info, "Arch. setup OK => configure mode");
+    log(CLASS_PLATFORM, Info, "SetpOK:confmode");
     return ConfigureMode;
   } else {
-    log(CLASS_PLATFORM, Info, "Arch. setup OK => run mode");
+    log(CLASS_PLATFORM, Info, "SetpOK:runmode");
     return RunMode;
   }
 

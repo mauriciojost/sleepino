@@ -6,6 +6,8 @@
 #include <Platform.h>
 #include <primitives/BoardX86_64.h>
 
+#define MAX_SLEEP_CYCLE_SECS 3600 // 1 hour
+
 #ifndef SIMULATOR_LOGIN
 #error "Must define SIMULATOR_LOGIN"
 #endif // SIMULATOR_LOGIN

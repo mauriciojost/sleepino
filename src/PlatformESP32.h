@@ -18,6 +18,8 @@
 #include <Wire.h>
 #include <primitives/BoardESP32.h>
 
+#define MAX_SLEEP_CYCLE_SECS 2419200 // 4 weeks
+
 #define FORMAT_SPIFFS_IF_FAILED true
 #define DELAY_MS_SPI 1
 #define HW_STARTUP_DELAY_MSECS 10
@@ -217,10 +219,6 @@ BotMode setupArchitecture() {
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
   heartbeat();
 
-  log(CLASS_PLATFORM, Debug, "Setup random");
-  randomSeed(analogRead(0) * 256 + analogRead(0));
-  heartbeat();
-
   log(CLASS_PLATFORM, Debug, "Setup commands");
 #ifdef TELNET_ENABLED
   telnet.setCallBackProjectCmds(reactCommandCustom);
@@ -229,13 +227,14 @@ BotMode setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-  log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
+
+  log(CLASS_PLATFORM, Debug, "Wait user...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
-    log(CLASS_PLATFORM, Info, "Arch. setup OK => configure mode");
+    log(CLASS_PLATFORM, Info, "SetpOK:confmode");
     return ConfigureMode;
   } else {
-    log(CLASS_PLATFORM, Info, "Arch. setup OK => run mode");
+    log(CLASS_PLATFORM, Info, "SetpOK:runmode");
     return RunMode;
   }
 
@@ -329,11 +328,11 @@ void abort(const char *msg) {
 }
 
 int readRemainingSecs() {
-  return -1; // not supported
+  return -1; // not supported nor needed
 }
 
 void writeRemainingSecs(int s) {
-  return; // not supported
+  return; // not supported nor needed
 }
 
 
