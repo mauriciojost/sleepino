@@ -188,7 +188,6 @@ BotMode setupArchitecture() {
   Serial.begin(115200);     // Initialize serial port
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
-  setLogLevel(Info);
   log(CLASS_PLATFORM, Info, "Log initialized");
 
   log(CLASS_PLATFORM, Debug, "Setup cmds");
