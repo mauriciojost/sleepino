@@ -357,7 +357,7 @@ void debugHandle() {
     firstTime = false;
   }
 
-  m->getSleepinoSettings()->getStatus()->fill("heap:%d/%d", ESP.getFreeHeap(), ESP.getHeapSize());
+  m->getSleepinoSettings()->getStatus()->fill("freeheap:%d/%d", ESP.getFreeHeap(), ESP.getHeapSize());
   m->getSleepinoSettings()->getMetadata()->changed();
 
 #ifdef TELNET_ENABLED

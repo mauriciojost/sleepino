@@ -148,3 +148,5 @@
 /serial_monitor
 /upload
 /.serial.log
+/.pio
+/.vscode
