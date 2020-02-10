@@ -16,7 +16,7 @@
 -D MAX_JSON_STR_LENGTH=1024
 -D HTTP_TIMEOUT_MS=2000
 
--D LOG_LEVEL=2
+-D LOG_LEVEL=0
 -D YES_DEBUG
 # As per experience, this is a good empirical value
 # less than this and the device wakes up too early, triggering no actor

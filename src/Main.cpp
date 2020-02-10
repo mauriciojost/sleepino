@@ -17,8 +17,8 @@
 
 
 void setup() {
-  log(CLASS_MAIN, Info, "Resume DS...");
-  resumeExtendedDeepSleepIfApplicable();
+  //log(CLASS_MAIN, Info, "Resume DS...");
+  //resumeExtendedDeepSleepIfApplicable();
 
   BotMode mode = setupArchitecture();
 
