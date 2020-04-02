@@ -24,6 +24,10 @@
 #define USER_INTERACTION_LOOPS_MAX 40
 #endif // USER_INTERACTION_LOOPS_MAX
 
+#ifndef INVALID_THRESHOLD_SLEEP_CYCLE_SECS
+#define INVALID_THRESHOLD_SLEEP_CYCLE_SECS (3600*4)
+#endif // INVALID_THRESHOLD_SLEEP_CYCLE_SECS
+
 
 Buffer *logBuffer = NULL;
 ModuleSleepino *m = NULL;
@@ -182,7 +186,10 @@ void updateFirmwareVersion(const char *targetVersion, const char *currentVersion
 }
 
 void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
-  if (periodSecs <= MAX_SLEEP_CYCLE_SECS) {
+  if (periodSecs > INVALID_THRESHOLD_SLEEP_CYCLE_SECS) {
+    log(CLASS_PLATFORM, Warn, "Invalid DS: %d", periodSecs);
+    writeRemainingSecs(0); // clean RTC for next boot
+  } else if (periodSecs <= MAX_SLEEP_CYCLE_SECS) {
     log(CLASS_PLATFORM, Debug, "Regular DS %d", periodSecs);
     writeRemainingSecs(0); // clean RTC for next boot
     deepSleepNotInterruptable(now(), periodSecs);
