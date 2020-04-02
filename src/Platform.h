@@ -203,8 +203,8 @@ void deepSleepNotInterruptableCustom(time_t cycleBegin, time_t periodSecs) {
 
 void resumeExtendedDeepSleepIfApplicable() {
   int remainingSecs = readRemainingSecs();
-  if (periodSecs > INVALID_THRESHOLD_SLEEP_CYCLE_SECS) {
-    log(CLASS_PLATFORM, Warn, "Invalid DS: %d", periodSecs);
+  if (remainingSecs > INVALID_THRESHOLD_SLEEP_CYCLE_SECS) {
+    log(CLASS_PLATFORM, Warn, "Invalid DS: %d", remainingSecs);
     writeRemainingSecs(0); // clean RTC for next boot
   } else if (remainingSecs > MAX_SLEEP_CYCLE_SECS) {
     log(CLASS_PLATFORM, Info, "EDS ongoing %d(+%d remaining)", MAX_SLEEP_CYCLE_SECS, remainingSecs);
