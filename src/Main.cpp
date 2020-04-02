@@ -17,10 +17,10 @@
 
 
 void setup() {
+  BotMode mode = setupArchitecture();
+
   log(CLASS_MAIN, Info, "Resume DS...");
   resumeExtendedDeepSleepIfApplicable();
-
-  BotMode mode = setupArchitecture();
 
   m = new ModuleSleepino();
   m->setup(messageFunc,
