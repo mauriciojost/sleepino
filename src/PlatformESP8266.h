@@ -410,7 +410,11 @@ void reactCommandCustom() { // for the use via telnet
 #endif // TELNET_ENABLED
 }
 
-void heartbeat() { }
+void heartbeat() {
+  digitalWrite(GPIO2_PIN, HIGH); // built-in LCD... warning, overlaps with LCD!
+  delay(10);
+  digitalWrite(GPIO2_PIN, LOW);
+}
 
 void handleInterrupt() {
   if (Serial.available()) {
