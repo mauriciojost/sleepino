@@ -239,7 +239,9 @@ BotMode setupArchitecture() {
     espSaveCrash.clear();
   } else if (espSaveCrash.count() > 0) {
     log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
-    espSaveCrash.print();
+    char logBfr[256];
+    espSaveCrash.print(logBfr, 256);
+    logRaw(CLASS_PLATFORM, Warn, logBfr);
   } else {
     log(CLASS_PLATFORM, Debug, "No crashes");
   }
