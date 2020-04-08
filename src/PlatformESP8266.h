@@ -108,27 +108,34 @@ const char *apiDevicePass() {
   return initializeTuningVariable(&apiDevicePwd, DEVICE_PWD_FILENAME, DEVICE_PWD_MAX_LENGTH, NULL, true)->getBuffer();
 }
 
-void logLine(const char *str, const char *clz, LogLevel l) {
+void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   int ts = (int)((millis()/1000) % 10000);
   Buffer aux(8);
   aux.fill("%04d|", ts);
-
-  Serial.print(ts);
-  Serial.print('|');
+  // serial print
+#ifdef HEAP_VCC_LOG
+  Serial.print("HEA:");
+  Serial.print(ESP.getFreeHeap());
+  Serial.print("|");
+  Serial.print("VCC:");
+  Serial.print(VCC_FLOAT);
+  Serial.print("|");
+#endif // HEAP_VCC_LOG
   Serial.print(str);
-  if (m == NULL) {
-    return;
-  }
-#ifdef TELNET_ENABLED
   // telnet print
+#ifdef TELNET_ENABLED
   if (telnet.isActive()) {
     for (unsigned int i = 0; i < strlen(str); i++) {
       telnet.write(str[i]);
     }
   }
 #endif // TELNET_ENABLED
+  bool lcdLogsEnabled = (m==NULL?true:m->getBotinoSettings()->getLcdLogs());
+  bool fsLogsEnabled = (m==NULL?true:m->getBotinoSettings()->fsLogsEnabled());
+  int fsLogsLength = (m==NULL?DEFAULT_FS_LOGS_LENGTH:m->getBotinoSettings()->getFsLogsLength());
+
   // lcd print
-  if (lcd != NULL && m->getSleepinoSettings()->getLcdLogs()) { // can be called before LCD initialization
+  if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
     int line = currentLogLine + 2;
     lcd->setTextWrap(false);
@@ -141,12 +148,19 @@ void logLine(const char *str, const char *clz, LogLevel l) {
     delay(DELAY_MS_SPI);
   }
   // local logs (to be sent via network)
-  if (m->getSleepinoSettings()->fsLogsEnabled()) {
+  if (fsLogsEnabled) {
     if (logBuffer == NULL) {
       logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
     }
-    logBuffer->append(aux.getBuffer());
-    logBuffer->append(str);
+    if (newline) {
+      logBuffer->append(aux.getBuffer());
+    }
+    unsigned int s = (unsigned int)(fsLogsLength) + 1;
+    char aux2[s];
+    strncpy(aux2, str, s);
+    aux2[s - 1] = 0;
+    aux2[s - 2] = '\n';
+    logBuffer->append(aux2);
   }
 }
 
