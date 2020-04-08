@@ -130,9 +130,9 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
     }
   }
 #endif // TELNET_ENABLED
-  bool lcdLogsEnabled = (m==NULL?true:m->getBotinoSettings()->getLcdLogs());
-  bool fsLogsEnabled = (m==NULL?true:m->getBotinoSettings()->fsLogsEnabled());
-  int fsLogsLength = (m==NULL?DEFAULT_FS_LOGS_LENGTH:m->getBotinoSettings()->getFsLogsLength());
+  bool lcdLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->getLcdLogs());
+  bool fsLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->fsLogsEnabled());
+  int fsLogsLength = (m==NULL?DEFAULT_FS_LOGS_LENGTH:m->getSleepinoSettings()->getFsLogsLength());
 
   // lcd print
   if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization

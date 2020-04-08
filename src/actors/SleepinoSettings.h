@@ -6,11 +6,13 @@
 
 #define STATUS_BUFFER_SIZE 64
 #define CLASS_SLEEPINO_SETTINGS "SS"
+#define DEFAULT_FS_LOGS_LENGTH 32
 
 enum SleepinoSettingsProps {
   SleepinoSettingsLcdLogsProp = 0,   // boolean, define if the device display logs in LCD
   SleepinoSettingsStatusProp,        // string, defines the current general status of the device (vcc level, heap, etc)
   SleepinoSettingsFsLogsProp,        // boolean, define if logs are to be dumped in the file system (only in debug mode)
+  SleepinoSettingsFsLengthLogsProp,       // integer, define the length of the line in the logs
   SleepinoSettingsWifiSsidBackupProp,// string, ssid for backup wifi network
   SleepinoSettingsWifiPassBackupProp,// string, pass for backup wifi network
   SleepinoSettingsPropsDelimiter
@@ -23,6 +25,7 @@ private:
   bool lcdLogs;
   Buffer *status;
   bool fsLogs;
+  int fsLogsLength;
   Buffer *ssidb;
   Buffer *passb;
   Metadata *md;
@@ -34,6 +37,7 @@ public:
     lcdLogs = true;
     status = new Buffer(STATUS_BUFFER_SIZE);
     fsLogs = true;
+    fsLogsLength = DEFAULT_FS_LOGS_LENGTH;
     ssidb = new Buffer(20);
     ssidb->load("defaultssid");
     passb = new Buffer(20);
@@ -65,6 +69,8 @@ public:
         return STATUS_PROP_PREFIX "status";
       case (SleepinoSettingsFsLogsProp):
         return DEBUG_PROP_PREFIX "fslogs";
+      case (SleepinoSettingsFsLengthLogsProp):
+        return DEBUG_PROP_PREFIX "fsll";
       case (SleepinoSettingsWifiSsidBackupProp):
         return SENSITIVE_PROP_PREFIX "ssidb";
       case (SleepinoSettingsWifiPassBackupProp):
@@ -85,6 +91,8 @@ public:
       case (SleepinoSettingsFsLogsProp):
         setPropBoolean(m, targetValue, actualValue, &fsLogs);
         break;
+      case (SleepinoSettingsFsLengthLogsProp):
+        setPropInteger(m, targetValue, actualValue, &fsLogsLength);
       case (SleepinoSettingsWifiSsidBackupProp):
         setPropValue(m, targetValue, actualValue, ssidb);
         break;
@@ -109,6 +117,10 @@ public:
 
   bool fsLogsEnabled() {
     return fsLogs;
+  }
+
+  int getFsLogsLength() {
+    return fsLogsLength;
   }
 
   bool getLcdLogs() {
