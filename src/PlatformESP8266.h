@@ -247,9 +247,8 @@ BotMode setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-  if (espSaveCrash.count() > 5) {
-    log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
-    log(CLASS_PLATFORM, Warn, "Too many Stack-trcs / clearing (!!!)");
+  if (espSaveCrash.count() > 2) {
+    log(CLASS_PLATFORM, Error, "Crshs:%d(!!!)", espSaveCrash.count());
     espSaveCrash.clear();
   } else if (espSaveCrash.count() > 0) {
     log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
