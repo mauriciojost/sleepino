@@ -37,6 +37,9 @@
 
 #define SLEEP_PERIOD_PRE_ABORT_SEC 5
 
+#define ABORT_LOG_FILENAME "/abort.log"
+#define ABORT_LOG_MAX_LENGTH 64
+
 #define LCD_CHAR_WIDTH 6
 #define LCD_CHAR_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
@@ -114,9 +117,9 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   aux.fill("%04d|", ts);
   // serial print
 #ifdef HEAP_VCC_LOG
-  Serial.print("HEA:");
-  Serial.print(ESP.getFreeHeap());
-  Serial.print("|");
+  //Serial.print("HEA:");
+  //Serial.print(ESP.getFreeHeap()); // caused a crash, reenable upon upgrade
+  //Serial.print("|");
   Serial.print("VCC:");
   Serial.print(VCC_FLOAT);
   Serial.print("|");
@@ -259,7 +262,16 @@ BotMode setupArchitecture() {
     log(CLASS_PLATFORM, Debug, "No crashes");
   }
 
-  log(CLASS_PLATFORM, Debug, "Wait user...");
+  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
+  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
+  if (abrt) {
+    log(CLASS_PLATFORM, Warn, "Abort: %s", fcontent.getBuffer());
+    SPIFFS.begin();
+    SPIFFS.remove(ABORT_LOG_FILENAME);
+    SPIFFS.end();
+  }
+
+  log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
     log(CLASS_PLATFORM, Info, "SetpOK:confmode");
@@ -357,6 +369,11 @@ void configureModeArchitecture() {
 
 void abort(const char *msg) {
   log(CLASS_PLATFORM, Error, "Abort: %s", msg);
+  
+  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
+  fcontent.fill("time=%ld msg=%s", now(), msg);
+  writeFile(ABORT_LOG_FILENAME, fcontent.getBuffer());
+
   log(CLASS_PLATFORM, Warn, "Will deep sleep upon abort...");
   bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
   if (!inte) {
@@ -408,7 +425,8 @@ void debugHandle() {
     firstTime = false;
   }
 
-  m->getSleepinoSettings()->getStatus()->fill("freeheap:%d", ESP.getFreeHeap());
+  //m->getSleepinoSettings()->getStatus()->fill("freeheap:%d", ESP.getFreeHeap()); // made crash, reenable upon upgrade
+  m->getSleepinoSettings()->getStatus()->fill("vcc:%0.2f", VCC_FLOAT);
   m->getSleepinoSettings()->getMetadata()->changed();
 
 #ifdef TELNET_ENABLED
