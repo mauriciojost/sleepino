@@ -11,6 +11,12 @@ ls
 
 ls exports
 
+
+# Convention:
+#  firmware-<version>.<platform>.bin
+# Example:
+#  firmware-3.1.1.esp32.bin
+
 export EXPO=/var/lib/main4ino/httpexposed/sleepino
 
 function export_firmware_for_platform() {
@@ -25,12 +31,6 @@ function export_firmware_for_platform() {
     echo "Moving $f..."
     mv -f $f $EXPO
   done
-
-  # Rules
-  cd $EXPO
-  ls -t | grep firmware | grep $platform | head -1 | xargs -I% ln -sf % $platform.latest.bin
-  ls -t | grep firmware | grep $platform | grep -v SNAPSHOT | head -1 | xargs -I% ln -sf % $platform.latest-stable.bin
-  cd -
 
 }
 
