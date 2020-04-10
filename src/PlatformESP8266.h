@@ -258,10 +258,10 @@ BotMode setupArchitecture() {
     espSaveCrash.print(logBfr, 256);
     if (logBuffer != NULL) {
       logBuffer->append("\n");
-      logBuffer->append(logBfr.getBuffer());
+      logBuffer->append(logBfr);
       logBuffer->append("\n");
     }
-    writeFile(STACKTRACE_LOG_FILENAME, logBfr.getBuffer());
+    writeFile(STACKTRACE_LOG_FILENAME, logBfr);
     espSaveCrash.clear();
   } else {
     log(CLASS_PLATFORM, Debug, "No crashes");
