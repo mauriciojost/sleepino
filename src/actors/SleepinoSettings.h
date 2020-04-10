@@ -93,6 +93,7 @@ public:
         break;
       case (SleepinoSettingsFsLengthLogsProp):
         setPropInteger(m, targetValue, actualValue, &fsLogsLength);
+        break;
       case (SleepinoSettingsWifiSsidBackupProp):
         setPropValue(m, targetValue, actualValue, ssidb);
         break;
