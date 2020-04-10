@@ -40,6 +40,8 @@
 #define ABORT_LOG_FILENAME "/abort.log"
 #define ABORT_LOG_MAX_LENGTH 64
 
+#define STACKTRACE_LOG_FILENAME "/stacktrace.log"
+
 #define LCD_CHAR_WIDTH 6
 #define LCD_CHAR_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
@@ -113,8 +115,8 @@ const char *apiDevicePass() {
 
 void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   int ts = (int)((millis()/1000) % 10000);
-  Buffer aux(8);
-  aux.fill("%04d|", ts);
+  Buffer time(8);
+  time.fill("%04d|", ts);
   // serial print
 #ifdef HEAP_VCC_LOG
   //Serial.print("HEA:");
@@ -156,7 +158,7 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
       logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
     }
     if (newline) {
-      logBuffer->append(aux.getBuffer());
+      logBuffer->append(time.getBuffer());
     }
     unsigned int s = (unsigned int)(fsLogsLength) + 1;
     char aux2[s];
@@ -250,14 +252,17 @@ BotMode setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-  if (espSaveCrash.count() > 2) {
-    log(CLASS_PLATFORM, Error, "Crshs:%d(!!!)", espSaveCrash.count());
-    espSaveCrash.clear();
-  } else if (espSaveCrash.count() > 0) {
+  if (espSaveCrash.count() > 0) {
     log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
     char logBfr[256];
     espSaveCrash.print(logBfr, 256);
-    logRaw(CLASS_PLATFORM, Warn, logBfr);
+    if (logBuffer != NULL) {
+      logBuffer->append("\n");
+      logBuffer->append(logBfr.getBuffer());
+      logBuffer->append("\n");
+    }
+    writeFile(STACKTRACE_LOG_FILENAME, logBfr.getBuffer());
+    espSaveCrash.clear();
   } else {
     log(CLASS_PLATFORM, Debug, "No crashes");
   }
@@ -269,6 +274,8 @@ BotMode setupArchitecture() {
     SPIFFS.begin();
     SPIFFS.remove(ABORT_LOG_FILENAME);
     SPIFFS.end();
+  } else {
+    log(CLASS_PLATFORM, Debug, "No abort");
   }
 
   log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
