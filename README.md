@@ -31,13 +31,6 @@ When contributing, keep always in mind the best practices:
 - Try not to overuse the heap (only 4K!): prefer static memory allocation rather than dynamic one
 - Reuse instances as much as possible
 
-### Eclipse
-
-To get started with _eclipse_ do:
-```
-platformio init --ide eclipse --board esp12e
-```
-
 ## Upload
 
 To upload the firmware just do: 
