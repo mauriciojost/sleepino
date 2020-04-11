@@ -206,16 +206,9 @@ void testArchitecture() {}
 // Execution
 ///////////////////
 
-//#define WAKE_UP_PIN 0 
-
-void printMillis() {
-  log(CLASS_PLATFORM, Debug, "LLS-MILLIS=%d", (int)millis()); 
-  Serial.flush();  // needs a Serial.flush() else it may not print the whole message before sleeping
-}
-
+#define WAKE_UP_PIN 0 
 
 void wakeupCallback() {  // unlike ISRs, you can do a print() from a callback function
-  printMillis();  // show time difference across sleep; millis is wrong as the CPU eventually stops
   log(CLASS_PLATFORM, Debug, "LLS-WOKEUPCB");
 }
 
@@ -223,11 +216,10 @@ void lightSleep(int ms) {
   // From https://github.com/esp8266/Arduino/pull/6989/files 
   log(CLASS_PLATFORM, Debug, "LLS-INIT");
   WiFi.mode(WIFI_OFF);  // you must turn the modem off; using disconnect won't work
-  printMillis();  // show millis() across sleep, including Serial.flush()
   extern os_timer_t *timer_list;
   timer_list = nullptr;  // stop (but don't disable) the 4 OS timers
   wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
-  // gpio_pin_wakeup_enable(GPIO_ID_PIN(WAKE_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO wakeup (optional)
+  gpio_pin_wakeup_enable(GPIO_ID_PIN(WAKE_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO wakeup (optional)
   // only LOLEVEL or HILEVEL interrupts work, no edge, that's an SDK or CPU limitation
   wifi_fpm_set_wakeup_cb(wakeupCallback); // set wakeup callback
   // the callback is optional, but without it the modem will wake in 10 seconds then delay(10 seconds)
@@ -250,6 +242,9 @@ BotMode setupArchitecture() {
   setupLog(logLine);
   log(CLASS_PLATFORM, Info, "Log initialized");
   lightSleep(1000);
+  lightSleep(1000);
+  lightSleep(1000);
+  lightSleep(1000);
 
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
@@ -258,6 +253,7 @@ BotMode setupArchitecture() {
   log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
 
+  lightSleep(1000); // OK
 
   log(CLASS_PLATFORM, Debug, "Setup LCD");
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
@@ -274,6 +270,8 @@ BotMode setupArchitecture() {
   WiFi.hostname(apiDeviceLogin());
   heartbeat();
 
+  //lightSleep(1000);
+
   log(CLASS_PLATFORM, Debug, "Setup http");
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
   heartbeat();
@@ -285,6 +283,7 @@ BotMode setupArchitecture() {
   telnet.setHelpProjectsCmds(helpCli);
 #endif // TELNET_ENABLED
   heartbeat();
+
 
   if (espSaveCrash.count() > 0) {
     log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
@@ -312,7 +311,7 @@ BotMode setupArchitecture() {
     log(CLASS_PLATFORM, Debug, "No abort");
   }
 
-  lightSleep(1000);
+  //lightSleep(1000);
   
   log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
