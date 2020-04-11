@@ -143,6 +143,7 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
     int line = currentLogLine + 2;
+    /*
     lcd->setTextWrap(false);
     lcd->fillRect(0, line * LCD_CHAR_HEIGHT, 84, LCD_CHAR_HEIGHT, WHITE);
     lcd->setTextSize(1);
@@ -150,6 +151,7 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
     lcd->setCursor(0, line * LCD_CHAR_HEIGHT);
     lcd->print(str);
     lcd->display();
+    */
     delay(DELAY_MS_SPI);
   }
   // local logs (to be sent via network)
@@ -172,21 +174,23 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
 void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int size, const char *str) {
   switch (clearMode) {
     case FullClear:
-      lcd->clearDisplay();
+      //lcd->clearDisplay();
       break;
     case LineClear:
-      lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
+      //lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
       wrap = false;
       break;
     case NoClear:
       break;
   }
+  /*
   lcd->setTextWrap(wrap);
   lcd->setTextSize(size);
   lcd->setTextColor(color);
   lcd->setCursor(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT);
   lcd->print(str);
   lcd->display();
+  */
   log(CLASS_PLATFORM, Debug, "Msg(%d,%d):%s", x, y, str);
   delay(DELAY_MS_SPI);
 }
@@ -219,7 +223,7 @@ void lightSleep(int ms) {
   extern os_timer_t *timer_list;
   timer_list = nullptr;  // stop (but don't disable) the 4 OS timers
   wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
-  gpio_pin_wakeup_enable(GPIO_ID_PIN(WAKE_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO wakeup (optional)
+  //gpio_pin_wakeup_enable(GPIO_ID_PIN(WAKE_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO wakeup (optional)
   // only LOLEVEL or HILEVEL interrupts work, no edge, that's an SDK or CPU limitation
   wifi_fpm_set_wakeup_cb(wakeupCallback); // set wakeup callback
   // the callback is optional, but without it the modem will wake in 10 seconds then delay(10 seconds)
@@ -242,10 +246,6 @@ BotMode setupArchitecture() {
   setupLog(logLine);
   log(CLASS_PLATFORM, Info, "Log initialized");
   lightSleep(1000);
-  lightSleep(1000);
-  lightSleep(1000);
-  lightSleep(1000);
-
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
@@ -256,9 +256,11 @@ BotMode setupArchitecture() {
   lightSleep(1000); // OK
 
   log(CLASS_PLATFORM, Debug, "Setup LCD");
-  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
-  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
+  //lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
+  //lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
   delay(DELAY_MS_SPI);
+
+  lightSleep(1000); // OK
 
   heartbeat();
 
@@ -270,7 +272,7 @@ BotMode setupArchitecture() {
   WiFi.hostname(apiDeviceLogin());
   heartbeat();
 
-  //lightSleep(1000);
+  lightSleep(1000);
 
   log(CLASS_PLATFORM, Debug, "Setup http");
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
@@ -311,7 +313,7 @@ BotMode setupArchitecture() {
     log(CLASS_PLATFORM, Debug, "No abort");
   }
 
-  //lightSleep(1000);
+  lightSleep(1000);
   
   log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
@@ -340,6 +342,8 @@ void runModeArchitecture() {
 
   handleInterrupt();
   debugHandle();
+
+  lightSleep(5000);
 
 }
 
@@ -376,7 +380,7 @@ CmdExecStatus commandArchitecture(const char *c) {
     const char *c = strtok(NULL, " ");
     int i = atoi(c);
     log(CLASS_PLATFORM, User, "Set contrast to: %d", i);
-    lcd->setContrast(i);
+    //lcd->setContrast(i);
     return Executed;
   } else if (strcmp("reset", c) == 0) {
     ESP.restart(); // it is normal that it fails if invoked the first time after firmware is written
