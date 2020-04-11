@@ -143,7 +143,7 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
     int line = currentLogLine + 2;
-    /*
+#ifdef LCD_ENABLED
     lcd->setTextWrap(false);
     lcd->fillRect(0, line * LCD_CHAR_HEIGHT, 84, LCD_CHAR_HEIGHT, WHITE);
     lcd->setTextSize(1);
@@ -151,7 +151,7 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
     lcd->setCursor(0, line * LCD_CHAR_HEIGHT);
     lcd->print(str);
     lcd->display();
-    */
+#endif // LCD_ENABLED
     delay(DELAY_MS_SPI);
   }
   // local logs (to be sent via network)
@@ -174,23 +174,27 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
 void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int size, const char *str) {
   switch (clearMode) {
     case FullClear:
-      //lcd->clearDisplay();
+#ifdef LCD_ENABLED
+      lcd->clearDisplay();
+#endif // LCD_ENABLED
       break;
     case LineClear:
-      //lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
+#ifdef LCD_ENABLED
+      lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
+#endif // LCD_ENABLED
       wrap = false;
       break;
     case NoClear:
       break;
   }
-  /*
+#ifdef LCD_ENABLED
   lcd->setTextWrap(wrap);
   lcd->setTextSize(size);
   lcd->setTextColor(color);
   lcd->setCursor(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT);
   lcd->print(str);
   lcd->display();
-  */
+#endif // LCD_ENABLED
   log(CLASS_PLATFORM, Debug, "Msg(%d,%d):%s", x, y, str);
   delay(DELAY_MS_SPI);
 }
@@ -210,19 +214,20 @@ void testArchitecture() {}
 // Execution
 ///////////////////
 
-#define WAKE_UP_PIN 0 
 
 void wakeupCallback() {  // unlike ISRs, you can do a print() from a callback function
-  log(CLASS_PLATFORM, Debug, "LLS-WOKEUPCB");
+  log(CLASS_PLATFORM, Debug, "cls-wucb");
+  Serial.flush();
 }
 
-void lightSleep(int ms) {
+void customLightSleep(int ms) {
   // From https://github.com/esp8266/Arduino/pull/6989/files 
-  log(CLASS_PLATFORM, Debug, "LLS-INIT");
+  log(CLASS_PLATFORM, Debug, "cls(%dms)...", ms);
   WiFi.mode(WIFI_OFF);  // you must turn the modem off; using disconnect won't work
   extern os_timer_t *timer_list;
   timer_list = nullptr;  // stop (but don't disable) the 4 OS timers
   wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
+  //#define WAKE_UP_PIN PIN_D3 
   //gpio_pin_wakeup_enable(GPIO_ID_PIN(WAKE_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO wakeup (optional)
   // only LOLEVEL or HILEVEL interrupts work, no edge, that's an SDK or CPU limitation
   wifi_fpm_set_wakeup_cb(wakeupCallback); // set wakeup callback
@@ -231,7 +236,7 @@ void lightSleep(int ms) {
   wifi_fpm_open();
   wifi_fpm_do_sleep(ms * 1000);  // Sleep range = 10000 ~ 268,435,454 uS (0xFFFFFFE, 2^28-1)
   delay(ms + 1); // delay needs to be 1 mS longer than sleep or it only goes into Modem Sleep
-  log(CLASS_PLATFORM, Debug, "LLS-WOKEUP"); // the interrupt callback hits before this is executed
+  log(CLASS_PLATFORM, Debug, "cls wake-up"); // the interrupt callback hits before this is executed
 }
 
 
@@ -245,7 +250,6 @@ BotMode setupArchitecture() {
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
   log(CLASS_PLATFORM, Info, "Log initialized");
-  lightSleep(1000);
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
@@ -253,14 +257,12 @@ BotMode setupArchitecture() {
   log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
 
-  lightSleep(1000); // OK
-
   log(CLASS_PLATFORM, Debug, "Setup LCD");
-  //lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
-  //lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
+#ifdef LCD_ENABLED
+  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
+  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
+#endif // LCD_ENABLED
   delay(DELAY_MS_SPI);
-
-  lightSleep(1000); // OK
 
   heartbeat();
 
@@ -271,8 +273,6 @@ BotMode setupArchitecture() {
   WiFi.persistent(false);
   WiFi.hostname(apiDeviceLogin());
   heartbeat();
-
-  lightSleep(1000);
 
   log(CLASS_PLATFORM, Debug, "Setup http");
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
@@ -313,8 +313,6 @@ BotMode setupArchitecture() {
     log(CLASS_PLATFORM, Debug, "No abort");
   }
 
-  lightSleep(1000);
-  
   log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
   bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
   if (i) {
@@ -343,7 +341,14 @@ void runModeArchitecture() {
   handleInterrupt();
   debugHandle();
 
-  lightSleep(5000);
+
+  const char* alias = m->getModule()->getSettings()->getAlias();
+  if (strcmp(alias, "lightsleep") == 0) {
+    customLightSleep(10000);
+  } else if (strcmp(alias, "delay") == 0) {
+    delay(10000);
+  } else if (strcmp(alias, "none") == 0) {
+  }
 
 }
 
