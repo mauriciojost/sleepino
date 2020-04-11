@@ -344,10 +344,13 @@ void runModeArchitecture() {
 
   const char* alias = m->getModule()->getSettings()->getAlias();
   if (strcmp(alias, "lightsleep") == 0) {
-    customLightSleep(10000);
+    log(CLASS_PLATFORM, Debug, "ls");
+    customLightSleep(20000);
   } else if (strcmp(alias, "delay") == 0) {
-    delay(10000);
+    delay(20000);
+    log(CLASS_PLATFORM, Debug, "delay");
   } else if (strcmp(alias, "none") == 0) {
+    log(CLASS_PLATFORM, Debug, "none");
   }
 
 }
