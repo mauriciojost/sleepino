@@ -370,25 +370,27 @@ BotMode setupArchitecture() {
 
 void runModeArchitecture() {
 
+  int periodSecs = 300;
+  int cycles = 10;
+  
   // display lcd metrics (time, vcc, version)
-  for (int i=0; i < 60; i++) {
-    int periodSecs = 10;
+  for (int i=0; i < cycles; i++) {
+    
     Buffer timeAux(32);
-    Timing::humanize(m->getClock()->currentTime() + (periodSecs * i), &timeAux);
+    Timing::humanize(m->getClock()->currentTime() + ((periodSecs / cycles) * i), &timeAux);
     timeAux.replace(' ', '\n');
 
-    Buffer lcdAux(128);
+    Buffer lcdAux(200);
 
-    lcdAux.fill("%s\nVcc: %0.4f\nV:%s\nLIGHT SLEEP\n%d * %dsec", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION), i, periodSecs);
+    lcdAux.fill("%s\nVcc: %0.4f\nV:%s\n%d * %dsec", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION), i, periodSecs / cycles);
 
     messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
-    customLightSleep(periodSecs * 1000);
+    customLightSleep((periodSecs / cycles) * 1000);
   }
 
   handleInterrupt();
   debugHandle();
-
 
 }
 
