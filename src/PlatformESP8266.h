@@ -239,6 +239,8 @@ void customLightSleep(int ms) {
   int pmDc = readPinMode(LCD_DC_PIN);
   int pmCs = readPinMode(LCD_CS_PIN);
   int pmRst = readPinMode(LCD_RST_PIN);
+  log(CLASS_PLATFORM, Debug, "pins: clk=%d din=%d dc=%d cs=%d rst=%d...", pmClk, pmDin, pmDc, pmCs, pmRst);
+
 
   pinMode(LCD_CLK_PIN, INPUT_PULLUP);
   pinMode(LCD_DIN_PIN, INPUT_PULLUP);
@@ -292,6 +294,14 @@ BotMode setupArchitecture() {
 
   log(CLASS_PLATFORM, Debug, "Setup LCD");
 #ifdef LCD_ENABLED
+
+  int pmClk = readPinMode(LCD_CLK_PIN);
+  int pmDin = readPinMode(LCD_DIN_PIN);
+  int pmDc = readPinMode(LCD_DC_PIN);
+  int pmCs = readPinMode(LCD_CS_PIN);
+  int pmRst = readPinMode(LCD_RST_PIN);
+  log(CLASS_PLATFORM, Debug, "bpins:clk=%d din=%d dc=%d cs=%d rst=%d...", pmClk, pmDin, pmDc, pmCs, pmRst);
+
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
 #endif // LCD_ENABLED
