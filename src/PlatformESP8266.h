@@ -111,6 +111,12 @@ const char *apiDevicePass() {
   return initializeTuningVariable(&apiDevicePwd, DEVICE_PWD_FILENAME, DEVICE_PWD_MAX_LENGTH, NULL, true)->getBuffer();
 }
 
+void initLogBuffer() {
+  if (logBuffer == NULL) {
+    logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
+  }
+}
+
 void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   int ts = (int)((millis()/1000) % 10000);
   Buffer time(8);
@@ -154,9 +160,7 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   }
   // local logs (to be sent via network)
   if (fsLogsEnabled) {
-    if (logBuffer == NULL) {
-      logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
-    }
+    initLogBuffer();
     if (newline) {
       logBuffer->append(time.getBuffer());
     }
@@ -329,18 +333,14 @@ BotMode setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-
   if (espSaveCrash.count() > 0) {
-    log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
-    char logBfr[256];
-    espSaveCrash.print(logBfr, 256);
-    if (logBuffer != NULL) {
-      logBuffer->append("\n");
-      logBuffer->append(logBfr);
-      logBuffer->append("\n");
+    if (fsLogsEnabled) {
+      initLogBuffer();
+      espSaveCrash.print(logBuffer->getUnsafeBuffer(), LOG_BUFFER_MAX_LENGTH);
+      writeFile(STACKTRACE_LOG_FILENAME, logBuffer->getBuffer());
+      espSaveCrash.clear();
     }
-    writeFile(STACKTRACE_LOG_FILENAME, logBfr);
-    espSaveCrash.clear();
+    log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
   } else {
     log(CLASS_PLATFORM, Debug, "No crashes");
   }
