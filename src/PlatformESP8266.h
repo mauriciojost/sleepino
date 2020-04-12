@@ -340,8 +340,10 @@ BotMode setupArchitecture() {
       writeFile(STACKTRACE_LOG_FILENAME, logBuffer->getBuffer());
       espSaveCrash.clear();
     }
+    // Useful links for debugging:
     // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
     // ./packages/framework-arduinoespressif8266@2.20502.0/tools/sdk/include/user_interface.h
+    // https://bitbucket.org/mauriciojost/esp8266-stacktrace-translator/src/master/
     log(CLASS_PLATFORM, Warn, "Crshs:%d", espSaveCrash.count());
   } else {
     log(CLASS_PLATFORM, Debug, "No crashes");
