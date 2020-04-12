@@ -371,30 +371,24 @@ BotMode setupArchitecture() {
 void runModeArchitecture() {
 
   // display lcd metrics (time, vcc, version)
-  Buffer timeAux(32);
-  Timing::humanize(m->getClock()->currentTime(), &timeAux);
-  timeAux.replace(' ', '\n');
+  for (int i=0; i < 60; i++) {
+    int periodSecs = 10;
+    Buffer timeAux(32);
+    Timing::humanize(m->getClock()->currentTime() + (periodSecs * i), &timeAux);
+    timeAux.replace(' ', '\n');
 
-  Buffer lcdAux(64);
+    Buffer lcdAux(128);
 
-  lcdAux.fill("%s\nVcc: %0.4f\nV:%s", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION));
+    lcdAux.fill("%s\nVcc: %0.4f\nV:%s\nLIGHT SLEEP\n%d * %dsec", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION), i, periodSecs);
 
-  messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
+    messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
+
+    customLightSleep(periodSecs * 1000);
+  }
 
   handleInterrupt();
   debugHandle();
 
-
-  const char* alias = m->getModule()->getSettings()->getAlias();
-  if (strcmp(alias, "lightsleep") == 0) {
-    log(CLASS_PLATFORM, Debug, "ls");
-    customLightSleep(20000);
-  } else if (strcmp(alias, "delay") == 0) {
-    delay(20000);
-    log(CLASS_PLATFORM, Debug, "delay");
-  } else if (strcmp(alias, "none") == 0) {
-    log(CLASS_PLATFORM, Debug, "none");
-  }
 
 }
 
