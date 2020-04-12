@@ -14,8 +14,6 @@
 #ifdef TELNET_ENABLED
 #include <RemoteDebug.h>
 #endif // TELNET_ENABLED
-#include <SPI.h>
-#include <Wire.h>
 #include <primitives/BoardESP8266.h>
 
 #define MAX_SLEEP_CYCLE_SECS 1800 // 30min
@@ -220,7 +218,34 @@ void wakeupCallback() {  // unlike ISRs, you can do a print() from a callback fu
   Serial.flush();
 }
 
+int readPinMode(uint8_t pin) {
+  // https://github.com/arduino/Arduino/issues/4606
+  if (pin >= NUM_DIGITAL_PINS) 
+    return (-1);
+  uint8_t bit = digitalPinToBitMask(pin);
+  uint8_t port = digitalPinToPort(pin);
+  volatile uint32_t *reg = portModeRegister(port);
+  if (*reg & bit) 
+    return (OUTPUT);
+
+  volatile uint32_t *out = portOutputRegister(port);
+  return ((*out & bit) ? INPUT_PULLUP : INPUT);
+}
+
 void customLightSleep(int ms) {
+#ifdef LCD_ENABLED
+  int pmClk = readPinMode(LCD_CLK_PIN);
+  int pmDin = readPinMode(LCD_DIN_PIN);
+  int pmDc = readPinMode(LCD_DC_PIN);
+  int pmCs = readPinMode(LCD_CS_PIN);
+  int pmRst = readPinMode(LCD_RST_PIN);
+
+  pinMode(LCD_CLK_PIN, INPUT_PULLUP);
+  pinMode(LCD_DIN_PIN, INPUT_PULLUP);
+  pinMode(LCD_DC_PIN, INPUT_PULLUP);
+  pinMode(LCD_CS_PIN, INPUT_PULLUP);
+  pinMode(LCD_RST_PIN, INPUT_PULLUP);
+#endif // LCD_ENABLED
   // From https://github.com/esp8266/Arduino/pull/6989/files 
   log(CLASS_PLATFORM, Debug, "cls(%dms)...", ms);
   WiFi.mode(WIFI_OFF);  // you must turn the modem off; using disconnect won't work
@@ -237,6 +262,14 @@ void customLightSleep(int ms) {
   wifi_fpm_do_sleep(ms * 1000);  // Sleep range = 10000 ~ 268,435,454 uS (0xFFFFFFE, 2^28-1)
   delay(ms + 1); // delay needs to be 1 mS longer than sleep or it only goes into Modem Sleep
   log(CLASS_PLATFORM, Debug, "cls wake-up"); // the interrupt callback hits before this is executed
+
+#ifdef LCD_ENABLED
+  pinMode(LCD_CLK_PIN, pmClk);
+  pinMode(LCD_DIN_PIN, pmDin);
+  pinMode(LCD_DC_PIN, pmDc);
+  pinMode(LCD_CS_PIN, pmCs);
+  pinMode(LCD_RST_PIN, pmRst);
+#endif // LCD_ENABLED
 }
 
 
