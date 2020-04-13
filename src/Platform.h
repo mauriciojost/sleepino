@@ -90,7 +90,7 @@ void sleepNotInterruptable(time_t cycleBegin, time_t periodSec);
 bool sleepInterruptable(time_t cycleBegin, time_t periodSec);
 
 // Setup step specific to the architecture, tell bot mode to go to
-BotMode setupArchitecture();
+void setupArchitecture();
 
 // Loop in run mode specific to the architecture
 void runModeArchitecture();

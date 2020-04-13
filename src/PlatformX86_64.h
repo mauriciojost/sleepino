@@ -79,10 +79,9 @@ bool haveToInterrupt() {
   return false;
 }
 
-BotMode setupArchitecture() {
+void setupArchitecture() {
   log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
-  return RunMode;
 }
 
 void runModeArchitecture() {

@@ -194,7 +194,7 @@ void testArchitecture() {}
 // Execution
 ///////////////////
 
-BotMode setupArchitecture() {
+void setupArchitecture() {
 
   // Let HW startup
   delay(HW_STARTUP_DELAY_MSECS);
@@ -240,17 +240,6 @@ BotMode setupArchitecture() {
   telnet.setHelpProjectsCmds(helpCli);
 #endif // TELNET_ENABLED
   heartbeat();
-
-
-  log(CLASS_PLATFORM, Debug, "Wait user...");
-  bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
-  if (i) {
-    log(CLASS_PLATFORM, Info, "SetpOK:confmode");
-    return ConfigureMode;
-  } else {
-    log(CLASS_PLATFORM, Info, "SetpOK:runmode");
-    return RunMode;
-  }
 
 }
 

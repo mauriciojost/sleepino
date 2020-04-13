@@ -103,8 +103,8 @@ public:
 
   }
 
-  ModuleStartupPropertiesCode startupProperties() {
-    ModuleStartupPropertiesCode c = module->startupProperties();
+  StartupStatus startupProperties() {
+    StartupStatus c = module->startupProperties();
 
     // if running once every while, stay with properties synchronization
       // at the beginning and before sleeping, and nothing else

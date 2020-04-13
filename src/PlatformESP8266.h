@@ -279,7 +279,7 @@ void customLightSleep(int ms) {
 }
 
 
-BotMode setupArchitecture() {
+void setupArchitecture() {
 
   // Let HW startup
   delay(HW_STARTUP_DELAY_MSECS);
@@ -359,16 +359,6 @@ BotMode setupArchitecture() {
     SPIFFS.end();
   } else {
     log(CLASS_PLATFORM, Debug, "No abort");
-  }
-
-  log(CLASS_PLATFORM, Debug, "Letting user interrupt...");
-  bool i = sleepInterruptable(now(), SLEEP_PERIOD_UPON_BOOT_SEC);
-  if (i) {
-    log(CLASS_PLATFORM, Info, "SetpOK:confmode");
-    return ConfigureMode;
-  } else {
-    log(CLASS_PLATFORM, Info, "SetpOK:runmode");
-    return RunMode;
   }
 
 }

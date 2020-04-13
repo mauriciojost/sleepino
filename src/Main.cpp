@@ -17,7 +17,7 @@
 
 
 void setup() {
-  BotMode mode = setupArchitecture();
+  setupArchitecture();
 
   log(CLASS_MAIN, Info, "Resume DS...");
   resumeExtendedDeepSleepIfApplicable();
@@ -44,19 +44,15 @@ void setup() {
            getLogBuffer,
            vcc
   );
-  m->getBot()->setMode(mode);
 
   log(CLASS_MAIN, Info, "Startup properties...");
-  ModuleStartupPropertiesCode s = m->startupProperties();
-  if (s != ModuleStartupPropertiesCodeSuccess && s != ModuleStartupPropertiesCodeSkipped) {
-    log(CLASS_MAIN, Error, "Failed: %d", (int)s);
+  StartupStatus s = m->startupProperties();
+  m->getBot()->setMode(s.botMode);
+  if (s.startupCode != ModuleStartupPropertiesCodeSuccess && s.startupCode != ModuleStartupPropertiesCodeSkipped) {
+    log(CLASS_MAIN, Error, "Failed: %d", (int)s.startupCode);
     abort("Cannot startup properties");
   }
   log(CLASS_MAIN, Info, "Setup done.");
-  log(CLASS_MAIN, Info, "Loop started...");
-  if (m->getBot()->getMode() == ConfigureMode) {
-    logRaw(CLASS_MAIN, User, "Configure mode...");
-  }
 }
 
 void loop() {
