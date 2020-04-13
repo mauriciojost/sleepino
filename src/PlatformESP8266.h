@@ -159,7 +159,6 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
     delay(DELAY_MS_SPI);
   }
   // local logs (to be sent via network)
-  bool fsLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->fsLogsEnabled());
   if (fsLogsEnabled) {
     initLogBuffer();
     if (newline) {
@@ -335,6 +334,7 @@ BotMode setupArchitecture() {
   heartbeat();
 
   if (espSaveCrash.count() > 0) {
+    bool fsLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->fsLogsEnabled());
     if (fsLogsEnabled) {
       initLogBuffer();
       espSaveCrash.print(logBuffer->getUnsafeBuffer(), LOG_BUFFER_MAX_LENGTH);
