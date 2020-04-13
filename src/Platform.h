@@ -130,9 +130,9 @@ void askStringQuestion(const char *question, Buffer *answer) {
 }
 
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
-	bool first = false;
+  bool first = false;
   if (*var == NULL) {
-  	first = true;
+    first = true;
     *var = new Buffer(maxLength);
     bool succValue = readFile(filename, *var); // read value from file
     if (succValue) {                           // managed to retrieve the value
@@ -158,6 +158,8 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
   }
   return *var;
 }
+
+void nop() {}
 
 Buffer *getLogBuffer() {
   return logBuffer;
