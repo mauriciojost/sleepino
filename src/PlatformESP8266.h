@@ -15,6 +15,7 @@
 #include <RemoteDebug.h>
 #endif // TELNET_ENABLED
 #include <primitives/BoardESP8266.h>
+#include <PlatformESP.h>
 
 #define MAX_SLEEP_CYCLE_SECS 1800 // 30min
 

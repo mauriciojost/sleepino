@@ -17,6 +17,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <primitives/BoardESP32.h>
+#include <PlatformESP.h>
 
 #define MAX_SLEEP_CYCLE_SECS 2419200 // 4 weeks
 

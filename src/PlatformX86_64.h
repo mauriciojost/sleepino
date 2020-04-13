@@ -144,3 +144,5 @@ int main(int argc, const char *argv[]) {
 bool inDeepSleepMode() {
   return true;
 }
+
+void askStringQuestion(const char *question, Buffer *answer) {}

@@ -120,16 +120,10 @@ void writeRemainingSecs(int s);
 // Get VCC measure in volts.
 float vcc();
 
+void askStringQuestion(const char *question, Buffer *answer);
+
 // Generic functions common to all architectures
 ///////////////////
-
-void askStringQuestion(const char *question, Buffer *answer) {
-  log(CLASS_PLATFORM, User, "Question: %s", question);
-  Serial.setTimeout(QUESTION_ANSWER_TIMEOUT_MS);
-  Serial.readBytesUntil('\n', answer->getUnsafeBuffer(), QUESTION_ANSWER_MAX_LENGTH);
-  answer->replace('\n', '\0');
-  answer->replace('\r', '\0');
-}
 
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
   bool first = false;
