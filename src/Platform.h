@@ -27,7 +27,9 @@
 #ifndef INVALID_THRESHOLD_SLEEP_CYCLE_SECS
 #define INVALID_THRESHOLD_SLEEP_CYCLE_SECS (3600*6)
 #endif // INVALID_THRESHOLD_SLEEP_CYCLE_SECS
-
+#ifndef QUESTION_ANSWER_MAX_LENGTH
+#define QUESTION_ANSWER_MAX_LENGTH 128
+#endif // QUESTION_ANSWER_MAX_LENGTH
 Buffer *logBuffer = NULL;
 ModuleSleepino *m = NULL;
 
@@ -55,10 +57,6 @@ void stopWifi();
 // Parameters x/y are text coordinates: 1;0 means second line to the left.
 void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
 
-// Arms control function.
-// Parameters left/right are from 0 to 9 included, 0 being down, 9 being up.
-// Parameter steps defines how slow the movement is (1 being the fastest).
-void arms(int left, int right, int steps);
 
 // Clear device (for development purposes, to clear logs, stacktraces, etc)
 void clearDevice();
