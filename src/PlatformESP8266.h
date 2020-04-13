@@ -314,7 +314,7 @@ void setupArchitecture() {
   heartbeat();
 
   log(CLASS_PLATFORM, Debug, "Setup wdt");
-  ESP.wdtEnable(1); // argument not used
+  //ESP.wdtEnable(1); // argument not used // review me MMM
 
   log(CLASS_PLATFORM, Debug, "Setup wifi");
   WiFi.persistent(false);
@@ -365,7 +365,9 @@ void setupArchitecture() {
 
 void runModeArchitecture() {
 
-  int periodSecs = 300;
+  setLogLevel(0); // review me MMM
+
+  int periodSecs = 30;
   int cycles = 10;
   
   // display lcd metrics (time, vcc, version)
@@ -378,10 +380,16 @@ void runModeArchitecture() {
     Buffer lcdAux(200);
 
     lcdAux.fill("%s\nVcc: %0.4f\nV:%s\n%d * %dsec", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION), i, periodSecs / cycles);
+    logRaw(CLASS_PLATFORM, Debug, lcdAux.getBuffer());
 
     messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
     customLightSleep((periodSecs / cycles) * 1000);
+    heartbeat(); // review me MMM
+    delay(100);
+    heartbeat();
+    delay(100);
+    heartbeat();
   }
 
   handleInterrupt();
