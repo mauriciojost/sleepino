@@ -28,6 +28,10 @@
 #define INVALID_THRESHOLD_SLEEP_CYCLE_SECS (3600*6)
 #endif // INVALID_THRESHOLD_SLEEP_CYCLE_SECS
 
+#ifndef QUESTION_ANSWER_MAX_LENGTH
+#define QUESTION_ANSWER_MAX_LENGTH 128
+#endif // QUESTION_ANSWER_MAX_LENGTH
+
 
 Buffer *logBuffer = NULL;
 ModuleSleepino *m = NULL;
@@ -118,6 +122,13 @@ float vcc();
 // Generic functions common to all architectures
 ///////////////////
 
+void askStringQuestion(const char *question, Buffer *answer) {
+  log(CLASS_PLATFORM, User, "Question: %s", question);
+  Serial.readBytesUntil('\n', answer->getUnsafeBuffer(), QUESTION_ANSWER_MAX_LENGTH);
+  answer->replace('\n', '\0');
+  answer->replace('\r', '\0');
+}
+
 Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLength, const char *defaultContent, bool obfuscate) {
 	bool first = false;
   if (*var == NULL) {
@@ -132,7 +143,10 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
       log(CLASS_PLATFORM, Debug, "Using default: %s", defaultContent);
       (*var)->fill(defaultContent);
     } else {
-      abort(filename);
+      Buffer buffer(QUESTION_ANSWER_MAX_LENGTH);
+      askStringQuestion(filename, &buffer);
+      writeFile(filename, buffer.getBuffer());
+      (*var)->fill(buffer.getBuffer());
     }
   }
   if (first) {
