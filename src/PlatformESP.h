@@ -1,6 +1,11 @@
 #ifndef PLATFORM_ESP_INC
 #define PLATFORM_ESP_INC
 
+#ifndef QUESTION_ANSWER_MAX_LENGTH
+#define QUESTION_ANSWER_MAX_LENGTH 128
+#endif // QUESTION_ANSWER_MAX_LENGTH
+#define QUESTION_ANSWER_TIMEOUT_MS 60000
+
 void askStringQuestion(const char *question, Buffer *answer) {
   log(CLASS_PLATFORM, User, "Question: %s", question);
   Serial.setTimeout(QUESTION_ANSWER_TIMEOUT_MS);
