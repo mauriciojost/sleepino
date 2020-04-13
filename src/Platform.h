@@ -31,6 +31,7 @@
 #ifndef QUESTION_ANSWER_MAX_LENGTH
 #define QUESTION_ANSWER_MAX_LENGTH 128
 #endif // QUESTION_ANSWER_MAX_LENGTH
+#define QUESTION_ANSWER_TIMEOUT_MS 60000
 
 
 Buffer *logBuffer = NULL;
@@ -124,6 +125,7 @@ float vcc();
 
 void askStringQuestion(const char *question, Buffer *answer) {
   log(CLASS_PLATFORM, User, "Question: %s", question);
+  Serial.setTimeout(QUESTION_ANSWER_TIMEOUT_MS);
   Serial.readBytesUntil('\n', answer->getUnsafeBuffer(), QUESTION_ANSWER_MAX_LENGTH);
   answer->replace('\n', '\0');
   answer->replace('\r', '\0');
@@ -135,7 +137,7 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
     first = true;
     *var = new Buffer(maxLength);
     bool succValue = readFile(filename, *var); // read value from file
-    if (succValue) {                           // managed to retrieve the value
+    if (succValue && !(*var)->isEmpty()) {                           // managed to retrieve the value
       log(CLASS_PLATFORM, Debug, "Read %s: OK", filename);
       (*var)->replace('\n', 0);                // minor formatting
     } else if (defaultContent != NULL) {       // failed to retrieve value, use default content if provided
