@@ -219,8 +219,8 @@ void testArchitecture() {}
 
 
 void wakeupCallback() {  // unlike ISRs, you can do a print() from a callback function
-  log(CLASS_PLATFORM, Debug, "cls-wucb");
-  Serial.flush();
+  //log(CLASS_PLATFORM, Debug, "cls-wucb");
+  //Serial.flush();
 }
 
 int readPinMode(uint8_t pin) {
@@ -254,7 +254,7 @@ void customLightSleep(int ms) {
   pinMode(LCD_RST_PIN, INPUT_PULLUP);
 #endif // LCD_ENABLED
   // From https://github.com/esp8266/Arduino/pull/6989/files 
-  log(CLASS_PLATFORM, Debug, "cls(%dms)...", ms);
+  //log(CLASS_PLATFORM, Debug, "cls(%dms)...", ms);
   WiFi.mode(WIFI_OFF);  // you must turn the modem off; using disconnect won't work
   extern os_timer_t *timer_list;
   timer_list = nullptr;  // stop (but don't disable) the 4 OS timers
@@ -268,7 +268,7 @@ void customLightSleep(int ms) {
   wifi_fpm_open();
   wifi_fpm_do_sleep(ms * 1000);  // Sleep range = 10000 ~ 268,435,454 uS (0xFFFFFFE, 2^28-1)
   delay(ms + 1); // delay needs to be 1 mS longer than sleep or it only goes into Modem Sleep
-  log(CLASS_PLATFORM, Debug, "cls wake-up"); // the interrupt callback hits before this is executed
+  //log(CLASS_PLATFORM, Debug, "cls wake-up"); // the interrupt callback hits before this is executed
 
 #ifdef LCD_ENABLED
   pinMode(LCD_CLK_PIN, pmClk);
@@ -368,12 +368,13 @@ void runModeArchitecture() {
 
   setLogLevel(0); // review me MMM
 
-  int periodSecs = 30;
+  int periodSecs = m->getSleepinoSettings()->getLsDurationSecs();
   int cycles = 10;
   
   // display lcd metrics (time, vcc, version)
   for (int i=0; i < cycles; i++) {
     
+    log(CLASS_PLATFORM, Debug, "LS(%d/%d): %d...", i, cycles, periodSecs);
     Buffer timeAux(32);
     Timing::humanize(m->getClock()->currentTime() + ((periodSecs / cycles) * i), &timeAux);
     timeAux.replace(' ', '\n');
@@ -386,7 +387,7 @@ void runModeArchitecture() {
     messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
     customLightSleep((periodSecs / cycles) * 1000);
-    heartbeat(); // review me MMM
+    heartbeat(); // review me MMM (overlaps with LCD)
     delay(100);
     heartbeat();
     delay(100);

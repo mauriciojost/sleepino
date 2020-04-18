@@ -7,12 +7,14 @@
 #define STATUS_BUFFER_SIZE 64
 #define CLASS_SLEEPINO_SETTINGS "SS"
 #define DEFAULT_FS_LOGS_LENGTH 32
+#define DEFAULT_LS_DURATION_SECS 60
 
 enum SleepinoSettingsProps {
   SleepinoSettingsLcdLogsProp = 0,   // boolean, define if the device display logs in LCD
   SleepinoSettingsStatusProp,        // string, defines the current general status of the device (vcc level, heap, etc)
   SleepinoSettingsFsLogsProp,        // boolean, define if logs are to be dumped in the file system (only in debug mode)
-  SleepinoSettingsFsLengthLogsProp,       // integer, define the length of the line in the logs
+  SleepinoSettingsFsLengthLogsProp,  // integer, define the length of the line in the logs
+  SleepinoSettingsLsDurationSecsProp,// integer, duration to light sleep
   SleepinoSettingsWifiSsidBackupProp,// string, ssid for backup wifi network
   SleepinoSettingsWifiPassBackupProp,// string, pass for backup wifi network
   SleepinoSettingsPropsDelimiter
@@ -26,6 +28,7 @@ private:
   Buffer *status;
   bool fsLogs;
   int fsLogsLength;
+  int lightSleepDurationSecs;
   Buffer *ssidb;
   Buffer *passb;
   Metadata *md;
@@ -38,6 +41,7 @@ public:
     status = new Buffer(STATUS_BUFFER_SIZE);
     fsLogs = true;
     fsLogsLength = DEFAULT_FS_LOGS_LENGTH;
+    lightSleepDurationSecs = DEFAULT_LS_DURATION_SECS;
     ssidb = new Buffer(20);
     ssidb->load("defaultssid");
     passb = new Buffer(20);
@@ -94,6 +98,9 @@ public:
       case (SleepinoSettingsFsLengthLogsProp):
         setPropInteger(m, targetValue, actualValue, &fsLogsLength);
         break;
+      case (SleepinoSettingsLsDurationSecsProp):
+        setPropInteger(m, targetValue, actualValue, &lightSleepDurationSecs);
+        break;
       case (SleepinoSettingsWifiSsidBackupProp):
         setPropValue(m, targetValue, actualValue, ssidb);
         break;
@@ -122,6 +129,10 @@ public:
 
   int getFsLogsLength() {
     return fsLogsLength;
+  }
+
+  int getLsDurationSecs() {
+    return lightSleepDurationSecs;
   }
 
   bool getLcdLogs() {
