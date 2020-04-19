@@ -75,6 +75,8 @@ public:
         return DEBUG_PROP_PREFIX "fslogs";
       case (SleepinoSettingsFsLengthLogsProp):
         return DEBUG_PROP_PREFIX "fsll";
+      case (SleepinoSettingsLsDurationSecsProp):
+        return ADVANCED_PROP_PREFIX "lssecs";
       case (SleepinoSettingsWifiSsidBackupProp):
         return SENSITIVE_PROP_PREFIX "ssidb";
       case (SleepinoSettingsWifiPassBackupProp):
