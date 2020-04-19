@@ -300,27 +300,19 @@ void setupArchitecture() {
 }
 
 void runModeArchitecture() {
+  Buffer timeAux(32);
+  Timing::humanize(m->getClock()->currentTime(), &timeAux);
+  timeAux.replace(' ', '\n');
 
-  // display lcd metrics (time, vcc, version)
-  for (int i=0; i < cycles; i++) {
-    
-    log(CLASS_PLATFORM, Debug, "LS(%d/%d): %d...", i, cycles, periodSecs);
-    Buffer timeAux(32);
-    Timing::humanize(m->getClock()->currentTime() + ((periodSecs / cycles) * i), &timeAux);
-    timeAux.replace(' ', '\n');
+  Buffer lcdAux(200);
 
-    Buffer lcdAux(200);
+  lcdAux.fill("%s\nVcc: %0.4f\nV:%s\n", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION));
+  logRaw(CLASS_PLATFORM, Debug, lcdAux.getBuffer());
 
-    lcdAux.fill("%s\nVcc: %0.4f\nV:%s\n%d * %dsec", timeAux.getBuffer(), VCC_FLOAT, STRINGIFY(PROJ_VERSION), i, periodSecs / cycles);
-    logRaw(CLASS_PLATFORM, Debug, lcdAux.getBuffer());
-
-    messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
-
-  }
+  messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
   handleInterrupt();
   debugHandle();
-
 }
 
 CmdExecStatus commandArchitecture(const char *c) {
