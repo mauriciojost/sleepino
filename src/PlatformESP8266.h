@@ -223,63 +223,6 @@ void wakeupCallback() {  // unlike ISRs, you can do a print() from a callback fu
   //Serial.flush();
 }
 
-int readPinMode(uint8_t pin) {
-  // https://github.com/arduino/Arduino/issues/4606
-  if (pin >= NUM_DIGITAL_PINS) 
-    return (-1);
-  uint8_t bit = digitalPinToBitMask(pin);
-  uint8_t port = digitalPinToPort(pin);
-  volatile uint32_t *reg = portModeRegister(port);
-  if (*reg & bit) 
-    return (OUTPUT);
-
-  volatile uint32_t *out = portOutputRegister(port);
-  return ((*out & bit) ? INPUT_PULLUP : INPUT);
-}
-
-void customLightSleep(int ms) {
-#ifdef LCD_ENABLED
-  int pmClk = readPinMode(LCD_CLK_PIN);
-  int pmDin = readPinMode(LCD_DIN_PIN);
-  int pmDc = readPinMode(LCD_DC_PIN);
-  int pmCs = readPinMode(LCD_CS_PIN);
-  int pmRst = readPinMode(LCD_RST_PIN);
-  log(CLASS_PLATFORM, Debug, "pins: clk=%d din=%d dc=%d cs=%d rst=%d...", pmClk, pmDin, pmDc, pmCs, pmRst);
-
-
-  pinMode(LCD_CLK_PIN, INPUT_PULLUP);
-  pinMode(LCD_DIN_PIN, INPUT_PULLUP);
-  pinMode(LCD_DC_PIN, INPUT_PULLUP);
-  pinMode(LCD_CS_PIN, INPUT_PULLUP);
-  pinMode(LCD_RST_PIN, INPUT_PULLUP);
-#endif // LCD_ENABLED
-  // From https://github.com/esp8266/Arduino/pull/6989/files 
-  //log(CLASS_PLATFORM, Debug, "cls(%dms)...", ms);
-  WiFi.mode(WIFI_OFF);  // you must turn the modem off; using disconnect won't work
-  extern os_timer_t *timer_list;
-  timer_list = nullptr;  // stop (but don't disable) the 4 OS timers
-  wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
-  //#define WAKE_UP_PIN PIN_D3 
-  //gpio_pin_wakeup_enable(GPIO_ID_PIN(WAKE_UP_PIN), GPIO_PIN_INTR_LOLEVEL); // GPIO wakeup (optional)
-  // only LOLEVEL or HILEVEL interrupts work, no edge, that's an SDK or CPU limitation
-  wifi_fpm_set_wakeup_cb(wakeupCallback); // set wakeup callback
-  // the callback is optional, but without it the modem will wake in 10 seconds then delay(10 seconds)
-  // with the callback the sleep time is only 10 seconds total, no extra delay() afterward
-  wifi_fpm_open();
-  wifi_fpm_do_sleep(ms * 1000);  // Sleep range = 10000 ~ 268,435,454 uS (0xFFFFFFE, 2^28-1)
-  delay(ms + 1); // delay needs to be 1 mS longer than sleep or it only goes into Modem Sleep
-  //log(CLASS_PLATFORM, Debug, "cls wake-up"); // the interrupt callback hits before this is executed
-
-#ifdef LCD_ENABLED
-  pinMode(LCD_CLK_PIN, pmClk);
-  pinMode(LCD_DIN_PIN, pmDin);
-  pinMode(LCD_DC_PIN, pmDc);
-  pinMode(LCD_CS_PIN, pmCs);
-  pinMode(LCD_RST_PIN, pmRst);
-#endif // LCD_ENABLED
-}
-
-
 void setupArchitecture() {
 
   // Let HW startup
@@ -299,14 +242,6 @@ void setupArchitecture() {
 
   log(CLASS_PLATFORM, Debug, "Setup LCD");
 #ifdef LCD_ENABLED
-
-  int pmClk = readPinMode(LCD_CLK_PIN);
-  int pmDin = readPinMode(LCD_DIN_PIN);
-  int pmDc = readPinMode(LCD_DC_PIN);
-  int pmCs = readPinMode(LCD_CS_PIN);
-  int pmRst = readPinMode(LCD_RST_PIN);
-  log(CLASS_PLATFORM, Debug, "bpins:clk=%d din=%d dc=%d cs=%d rst=%d...", pmClk, pmDin, pmDc, pmCs, pmRst);
-
   lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
   lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
 #endif // LCD_ENABLED
@@ -315,7 +250,7 @@ void setupArchitecture() {
   heartbeat();
 
   log(CLASS_PLATFORM, Debug, "Setup wdt");
-  //ESP.wdtEnable(1); // argument not used // review me MMM
+  ESP.wdtEnable(1); // argument not used
 
   log(CLASS_PLATFORM, Debug, "Setup wifi");
   WiFi.persistent(false);
@@ -366,11 +301,6 @@ void setupArchitecture() {
 
 void runModeArchitecture() {
 
-  setLogLevel(0); // review me MMM
-
-  int periodSecs = m->getSleepinoSettings()->getLsDurationSecs();
-  int cycles = 10;
-  
   // display lcd metrics (time, vcc, version)
   for (int i=0; i < cycles; i++) {
     
@@ -386,12 +316,6 @@ void runModeArchitecture() {
 
     messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
-    customLightSleep((periodSecs / cycles) * 1000);
-    heartbeat(); // review me MMM (overlaps with LCD)
-    delay(100);
-    heartbeat();
-    delay(100);
-    heartbeat();
   }
 
   handleInterrupt();
@@ -541,11 +465,7 @@ void reactCommandCustom() { // for the use via telnet
 #endif // TELNET_ENABLED
 }
 
-void heartbeat() {
-  digitalWrite(GPIO2_PIN, HIGH); // built-in LCD... warning, overlaps with LCD!
-  delay(10);
-  digitalWrite(GPIO2_PIN, LOW);
-}
+void heartbeat() { }
 
 void handleInterrupt() {
   if (Serial.available()) {
