@@ -232,7 +232,10 @@ void setupArchitecture() {
   Serial.begin(115200);     // Initialize serial port
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
-  log(CLASS_PLATFORM, Info, "Log initialized");
+
+  log(CLASS_PLATFORM, User, "BOOT");
+  log(CLASS_PLATFORM, User, "%s", STRINGIFY(PROJ_VERSION));
+
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
@@ -478,8 +481,10 @@ void handleInterrupt() {
       } else if (c == 0x1b && n == 1) { // up/down
         log(CLASS_PLATFORM, Debug, "Up/down");
         cmdBuffer->load(cmdLast->getBuffer());
-      } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
+      } else if (c == '\n' && n == 1) { // if enter is pressed...
         log(CLASS_PLATFORM, Debug, "Enter");
+        cmdBuffer->replace('\n', 0);
+        cmdBuffer->replace('\r', 0);
         if (cmdBuffer->getLength() > 0) {
           CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
           bool interrupt = (execStatus == ExecutedInterrupt);

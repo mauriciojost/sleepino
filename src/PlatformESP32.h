@@ -207,7 +207,10 @@ void setupArchitecture() {
   Serial.begin(115200);     // Initialize serial port
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
-  log(CLASS_PLATFORM, Info, "Log initialized");
+
+  log(CLASS_PLATFORM, User, "BOOT");
+  log(CLASS_PLATFORM, User, "%s", STRINGIFY(PROJ_VERSION));
+
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
