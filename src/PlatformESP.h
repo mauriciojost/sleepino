@@ -8,8 +8,8 @@
 #define RESTORE_URL "http://main4ino.martinenhome.com/main4ino/prd/firmwares/botino/" PLATFORM_ID "/content?version=LATEST"
 #define RESTORE_RETRIES 10
 
-void restore() { // to be invoked as last resource when things go wrong
-  bool s = initializeWifi(RESTORE_WIFI_SSID, RESTORE_WIFI_PASS, RESTORE_WIFI_SSID, RESTORE_WIFI_PASS, true, RESTORE_RETRIES);
+void restoreSafeFirmware() { // to be invoked as last resource when things go wrong
+  initializeWifi(RESTORE_WIFI_SSID, RESTORE_WIFI_PASS, RESTORE_WIFI_SSID, RESTORE_WIFI_PASS, true, RESTORE_RETRIES);
   updateFirmware(RESTORE_URL, STRINGIFY(PROJ_VERSION));
 }
 

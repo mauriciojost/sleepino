@@ -240,34 +240,8 @@ void setupArchitecture() {
   log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
 
-  log(CLASS_PLATFORM, Debug, "Setup LCD");
-#ifdef LCD_ENABLED
-  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
-  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
-#endif // LCD_ENABLED
-  delay(DELAY_MS_SPI);
-
   heartbeat();
 
-  log(CLASS_PLATFORM, Debug, "Setup wdt");
-  ESP.wdtEnable(1); // argument not used
-
-  log(CLASS_PLATFORM, Debug, "Setup wifi");
-  WiFi.persistent(false);
-  WiFi.hostname(apiDeviceLogin());
-  heartbeat();
-
-  log(CLASS_PLATFORM, Debug, "Setup http");
-  httpClient.setTimeout(HTTP_TIMEOUT_MS);
-  heartbeat();
-
-  log(CLASS_PLATFORM, Debug, "Setup commands");
-#ifdef TELNET_ENABLED
-  telnet.setCallBackProjectCmds(reactCommandCustom);
-  String helpCli("Type 'help' for help");
-  telnet.setHelpProjectsCmds(helpCli);
-#endif // TELNET_ENABLED
-  heartbeat();
 
   if (espSaveCrash.count() > 0) {
     bool fsLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->fsLogsEnabled());
@@ -281,10 +255,38 @@ void setupArchitecture() {
     // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
     // ./packages/framework-arduinoespressif8266@2.20502.0/tools/sdk/include/user_interface.h
     // https://bitbucket.org/mauriciojost/esp8266-stacktrace-translator/src/master/
-    log(CLASS_PLATFORM, Error, "Crshs:%d", espSaveCrash.count());
+    log(CLASS_PLATFORM, Error, "Crshs:%d", (int)espSaveCrash.count());
+    restoreSafeFirmware();
   } else {
     log(CLASS_PLATFORM, Debug, "No crashes");
   }
+
+
+  log(CLASS_PLATFORM, Debug, "Setup wdt");
+  ESP.wdtEnable(1); // argument not used
+
+  log(CLASS_PLATFORM, Debug, "Setup wifi");
+  WiFi.persistent(false);
+  WiFi.hostname(apiDeviceLogin());
+  heartbeat();
+  log(CLASS_PLATFORM, Debug, "Setup LCD");
+#ifdef LCD_ENABLED
+  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
+  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
+#endif // LCD_ENABLED
+  delay(DELAY_MS_SPI);
+
+  log(CLASS_PLATFORM, Debug, "Setup http");
+  httpClient.setTimeout(HTTP_TIMEOUT_MS);
+  heartbeat();
+
+  log(CLASS_PLATFORM, Debug, "Setup commands");
+#ifdef TELNET_ENABLED
+  telnet.setCallBackProjectCmds(reactCommandCustom);
+  String helpCli("Type 'help' for help");
+  telnet.setHelpProjectsCmds(helpCli);
+#endif // TELNET_ENABLED
+  heartbeat();
 
   Buffer fcontent(ABORT_LOG_MAX_LENGTH);
   bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
