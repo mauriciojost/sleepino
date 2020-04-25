@@ -5,7 +5,7 @@
 
 #define RESTORE_WIFI_SSID "assid"
 #define RESTORE_WIFI_PASS "apassword"
-#define RESTORE_URL "http://main4ino.martinenhome.com/main4ino/prd/firmwares/botino/" PLATFORM_ID "/content?version=LATEST"
+#define RESTORE_URL "http://main4ino.martinenhome.com/main4ino/prd/firmwares/" PROJECT_ID "/" PLATFORM_ID "/content?version=LATEST"
 #define RESTORE_RETRIES 10
 
 void restoreSafeFirmware() { // to be invoked as last resource when things go wrong
