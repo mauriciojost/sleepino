@@ -14,6 +14,7 @@
 #ifdef TELNET_ENABLED
 #include <RemoteDebug.h>
 #endif // TELNET_ENABLED
+#include <Servo.h>
 #include <primitives/BoardESP8266.h>
 #include <PlatformESP.h>
 
@@ -72,6 +73,7 @@ extern "C" {
 RemoteDebug telnet;
 #endif // TELNET_ENABLED
 Adafruit_PCD8544* lcd = NULL;
+Servo servo0;
 Buffer *apiDeviceId = NULL;
 Buffer *apiDevicePwd = NULL;
 Buffer *contrast = NULL;
@@ -265,6 +267,9 @@ void setupArchitecture() {
   }
 
 
+  log(CLASS_PLATFORM, Debug, "Setup pins");
+  pinMode(POWER_PIN, OUTPUT);
+  pinMode(SERVO0_PIN, OUTPUT);
   log(CLASS_PLATFORM, Debug, "Setup wdt");
   ESP.wdtEnable(1); // argument not used
 
@@ -318,6 +323,16 @@ void runModeArchitecture() {
 
   handleInterrupt();
   debugHandle();
+
+  log(CLASS_PLATFORM, Debug, "Servo!!!");
+  digitalWrite(POWER_PIN, HIGH);
+  servo0.attach(SERVO0_PIN);
+  for (int i = 0; i <= 180; i++) {
+    servo0.write(i);
+    delay(20);
+  }
+  servo0.detach();
+  digitalWrite(POWER_PIN, LOW);
 }
 
 CmdExecStatus commandArchitecture(const char *c) {

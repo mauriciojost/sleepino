@@ -35,4 +35,8 @@
 #define PIN_D11 GPIO9_PIN  // SDD2 / SD2 // cannot be used at all, internal
 #define PIN_D12 GPIO10_PIN // SDD3 / SD3 // can be used as input only
 
+#define SERVO0_PIN PIN_D7
+
+#define POWER_PIN PIN_D3
+
 #endif // ESP8266
