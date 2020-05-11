@@ -271,7 +271,7 @@ void setupArchitecture() {
   pinMode(POWER_PIN, OUTPUT);
   pinMode(SERVO0_PIN, OUTPUT);
   log(CLASS_PLATFORM, Debug, "Setup wdt");
-  ESP.wdtEnable(1); // argument not used
+  //ESP.wdtEnable(1); // argument not used
 
   log(CLASS_PLATFORM, Debug, "Setup wifi");
   WiFi.persistent(false);
