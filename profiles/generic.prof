@@ -16,6 +16,7 @@
 -D MAX_JSON_STR_LENGTH=1024
 -D HTTP_TIMEOUT_MS=2000
 
+# keep log level to 1 to avoid seeing boot debug messages on startup, before fs properties are loaded
 -D LOG_LEVEL=1
 -D YES_DEBUG
 -D LCD_ENABLED
