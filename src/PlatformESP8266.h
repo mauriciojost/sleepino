@@ -325,14 +325,14 @@ void runModeArchitecture() {
   debugHandle();
 
   log(CLASS_PLATFORM, Debug, "Servo!!!");
-  digitalWrite(POWER_PIN, HIGH);
+  digitalWrite(POWER_PIN, LOW);
   servo0.attach(SERVO0_PIN);
   for (int i = 0; i <= 180; i++) {
     servo0.write(i);
     delay(20);
   }
   servo0.detach();
-  digitalWrite(POWER_PIN, LOW);
+  digitalWrite(POWER_PIN, HIGH);
 }
 
 CmdExecStatus commandArchitecture(const char *c) {
