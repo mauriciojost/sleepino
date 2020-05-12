@@ -397,9 +397,11 @@ void debugHandle() {
   m->getSleepinoSettings()->getMetadata()->changed();
 
 #ifdef TELNET_ENABLED
-  telnet.handle();     // Handle telnet log server and commands
   log(CLASS_PLATFORM, User, "telnet?");
-  delay(TELNET_HANDLE_DELAY_MS);
+  for (int i = 0; i < TELNET_HANDLE_DELAY_MS/1000; i++) {
+    telnet.handle();     // Handle telnet log server and commands
+    delay(1000);
+  }
 #endif // TELNET_ENABLED
 #ifdef OTA_ENABLED
   ArduinoOTA.handle(); // Handle on the air firmware load
