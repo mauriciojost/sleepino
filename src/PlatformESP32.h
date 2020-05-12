@@ -19,6 +19,10 @@
 #include <primitives/BoardESP32.h>
 #include <PlatformESP.h>
 
+#ifndef TELNET_HANDLE_DELAY_MS
+#define TELNET_HANDLE_DELAY_MS 240000 // 4 minutes
+#endif // TELNET_HANDLE_DELAY_MS
+
 #define MAX_SLEEP_CYCLE_SECS 2419200 // 4 weeks
 
 #define FORMAT_SPIFFS_IF_FAILED true
@@ -104,11 +108,16 @@ const char *apiDevicePass() {
   return initializeTuningVariable(&apiDevicePwd, DEVICE_PWD_FILENAME, DEVICE_PWD_MAX_LENGTH, NULL, true)->getBuffer();
 }
 
+void initLogBuffer() {
+  if (logBuffer == NULL) {
+    logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
+  }
+}
+
 void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   int ts = (int)((millis()/1000) % 10000);
-  Buffer aux(8);
-  aux.fill("%04d|", ts);
-
+  Buffer time(8);
+  time.fill("%04d|", ts);
   // serial print
   /*
 Serial.print("HEA:");
@@ -135,6 +144,7 @@ Serial.print("|");
   if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
     int line = currentLogLine + 2;
+#ifdef LCD_ENABLED
     lcd->setTextWrap(false);
     lcd->fillRect(0, line * LCD_CHAR_HEIGHT, 84, LCD_CHAR_HEIGHT, WHITE);
     lcd->setTextSize(1);
@@ -142,15 +152,14 @@ Serial.print("|");
     lcd->setCursor(0, line * LCD_CHAR_HEIGHT);
     lcd->print(str);
     lcd->display();
+#endif // LCD_ENABLED
     delay(DELAY_MS_SPI);
   }
   // local logs (to be sent via network)
   if (fsLogsEnabled) {
-    if (logBuffer == NULL) {
-      logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
-    }
+    initLogBuffer();
     if (newline) {
-      logBuffer->append(aux.getBuffer());
+      logBuffer->append(time.getBuffer());
     }
     unsigned int s = (unsigned int)(fsLogsLength) + 1;
     char aux2[s];
@@ -164,21 +173,27 @@ Serial.print("|");
 void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int size, const char *str) {
   switch (clearMode) {
     case FullClear:
+#ifdef LCD_ENABLED
       lcd->clearDisplay();
+#endif // LCD_ENABLED
       break;
     case LineClear:
+#ifdef LCD_ENABLED
       lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
+#endif // LCD_ENABLED
       wrap = false;
       break;
     case NoClear:
       break;
   }
+#ifdef LCD_ENABLED
   lcd->setTextWrap(wrap);
   lcd->setTextSize(size);
   lcd->setTextColor(color);
   lcd->setCursor(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT);
   lcd->print(str);
   lcd->display();
+#endif // LCD_ENABLED
   log(CLASS_PLATFORM, Debug, "Msg(%d,%d):%s", x, y, str);
   delay(DELAY_MS_SPI);
 }
@@ -259,8 +274,6 @@ void setupArchitecture() {
 }
 
 void runModeArchitecture() {
-
-  // display lcd metrics (time, vcc, version)
   Buffer timeAux(32);
   Timing::humanize(m->getClock()->currentTime(), &timeAux);
   timeAux.replace(' ', '\n');
@@ -385,6 +398,8 @@ void debugHandle() {
 
 #ifdef TELNET_ENABLED
   telnet.handle();     // Handle telnet log server and commands
+  log(CLASS_PLATFORM, User, "telnet?");
+  delay(TELNET_HANDLE_DELAY_MS);
 #endif // TELNET_ENABLED
 #ifdef OTA_ENABLED
   ArduinoOTA.handle(); // Handle on the air firmware load
@@ -416,8 +431,10 @@ void handleInterrupt() {
       } else if (c == 0x1b && n == 1) { // up/down
         log(CLASS_PLATFORM, Debug, "Up/down");
         cmdBuffer->load(cmdLast->getBuffer());
-      } else if ((c == '\n' || c == '\r') && n == 1) { // if enter is pressed...
+      } else if (c == '\n' && n == 1) { // if enter is pressed...
         log(CLASS_PLATFORM, Debug, "Enter");
+        cmdBuffer->replace('\n', 0);
+        cmdBuffer->replace('\r', 0);
         if (cmdBuffer->getLength() > 0) {
           CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
           bool interrupt = (execStatus == ExecutedInterrupt);

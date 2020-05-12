@@ -18,6 +18,10 @@
 #include <primitives/BoardESP8266.h>
 #include <PlatformESP.h>
 
+#ifndef TELNET_HANDLE_DELAY_MS
+#define TELNET_HANDLE_DELAY_MS 240000 // 4 minutes
+#endif // TELNET_HANDLE_DELAY_MS
+
 #define MAX_SLEEP_CYCLE_SECS 1800 // 30min
 
 #define DELAY_MS_SPI 1
@@ -469,6 +473,8 @@ void debugHandle() {
 
 #ifdef TELNET_ENABLED
   telnet.handle();     // Handle telnet log server and commands
+  log(CLASS_PLATFORM, User, "telnet?");
+  delay(TELNET_HANDLE_DELAY_MS);
 #endif // TELNET_ENABLED
 #ifdef OTA_ENABLED
   ArduinoOTA.handle(); // Handle on the air firmware load
