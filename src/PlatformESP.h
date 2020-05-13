@@ -19,6 +19,7 @@ void askStringQuestion(const char *question, Buffer *answer) {
   Serial.readBytesUntil('\n', answer->getUnsafeBuffer(), answer->getCapacity());
   answer->replace('\n', '\0');
   answer->replace('\r', '\0');
+  log(CLASS_PLATFORM, User, "Answer: '%s'", answer->getBuffer());
 }
 
 void io(int pin, int val) {

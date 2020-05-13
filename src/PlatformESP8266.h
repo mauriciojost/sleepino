@@ -231,7 +231,18 @@ void clearDevice() {
   espSaveCrash.clear();
 }
 
-void infoArchitecture() {}
+
+
+void infoArchitecture() {
+
+  log(CLASS_PLATFORM, User, "ID:%s\nV:%s\nCrashes:%d\nIP: %s\nnUptime:%luh\nVcc: %0.2f",
+                            apiDeviceLogin(),
+                            STRINGIFY(PROJ_VERSION),
+                            espSaveCrash.count(),
+                            WiFi.localIP().toString().c_str(),
+                            (millis() / 1000) / 3600,
+                            VCC_FLOAT);
+}
 
 void testArchitecture() {}
 
@@ -500,6 +511,9 @@ void debugHandle() {
 }
 
 void reactCommandCustom() { // for the use via telnet
+  if (m == NULL) {
+    return;
+  }
 #ifdef TELNET_ENABLED
   m->command(telnet.getLastCommand().c_str());
 #endif // TELNET_ENABLED
