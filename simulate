@@ -22,6 +22,7 @@ src/Base64.cpp
 src/DateStrings.cpp
 src/main4ino/*.cpp
 src/log4ino/*.cpp
+src/mod4ino/*.cpp
 "
 
 HEADERS="

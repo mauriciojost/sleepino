@@ -39,6 +39,9 @@
 
 #define SLEEP_PERIOD_PRE_ABORT_SEC 5
 
+#define ABORT_LOG_FILENAME "/abort.log"
+#define ABORT_LOG_MAX_LENGTH 64
+
 #define LCD_CHAR_WIDTH 6
 #define LCD_CHAR_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
@@ -204,7 +207,9 @@ void setupArchitecture() {
   Serial.begin(115200);     // Initialize serial port
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
-  log(CLASS_PLATFORM, Info, "Log initialized");
+
+  log(CLASS_PLATFORM, User, "BOOT");
+  log(CLASS_PLATFORM, User, "%s", STRINGIFY(PROJ_VERSION));
 
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
@@ -217,18 +222,16 @@ void setupArchitecture() {
   SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
 
 
-  log(CLASS_PLATFORM, Debug, "Setup LCD");
-  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
-  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
-  delay(DELAY_MS_SPI);
-
-  heartbeat();
-
-
   log(CLASS_PLATFORM, Debug, "Setup wifi");
   WiFi.persistent(false);
   WiFi.setHostname(apiDeviceLogin());
   heartbeat();
+  log(CLASS_PLATFORM, Debug, "Setup LCD");
+#ifdef LCD_ENABLED
+  lcd = new Adafruit_PCD8544(LCD_CLK_PIN, LCD_DIN_PIN, LCD_DC_PIN, LCD_CS_PIN, LCD_RST_PIN);
+  lcd->begin(lcdContrast(), LCD_DEFAULT_BIAS);
+#endif // LCD_ENABLED
+  delay(DELAY_MS_SPI);
 
   log(CLASS_PLATFORM, Debug, "Setup http");
   httpClient.setTimeout(HTTP_TIMEOUT_MS);
@@ -241,6 +244,17 @@ void setupArchitecture() {
   telnet.setHelpProjectsCmds(helpCli);
 #endif // TELNET_ENABLED
   heartbeat();
+
+  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
+  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
+  if (abrt) {
+    log(CLASS_PLATFORM, Warn, "Abort: %s", fcontent.getBuffer());
+    SPIFFS.begin();
+    SPIFFS.remove(ABORT_LOG_FILENAME);
+    SPIFFS.end();
+  } else {
+    log(CLASS_PLATFORM, Debug, "No abort");
+  }
 
 }
 
@@ -321,6 +335,11 @@ void configureModeArchitecture() {
 
 void abort(const char *msg) {
   log(CLASS_PLATFORM, Error, "Abort: %s", msg);
+  
+  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
+  fcontent.fill("time=%ld msg=%s", now(), msg);
+  writeFile(ABORT_LOG_FILENAME, fcontent.getBuffer());
+
   log(CLASS_PLATFORM, Warn, "Will deep sleep upon abort...");
   bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
   if (!inte) {
