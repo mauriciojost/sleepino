@@ -65,10 +65,13 @@ void clearDevice() {
 }
 
 
-
 void infoArchitecture() {}
 
 void testArchitecture() {}
+
+void servo(int idx, int pos) { }
+
+void io(int pin, int val) { }
 
 // Execution
 ///////////////////

@@ -15,9 +15,10 @@
 #define COMMAND_MAX_LENGTH 128
 
 #define HELP_COMMAND_CLI_PROJECT                                                                                                           \
-  "\n  SLEEPINO HELP"                                                                                                                        \
-  "\n  move ...        : execute a move (example: 'move A00C55')"                                                                          \
+  "\n  SLEEPINO HELP"                                                                                                                      \
   "\n  lcd ...         : write on display <x> <y> <color> <wrap> <clear> <size> <str>"                                                     \
+  "\n  servo ...       : control servo <idx> and put it in position <pos>"                                                                 \
+  "\n  io ...          : control pin <pin> and put it in level <out>"                                                                      \
   "\n  help            : show this help"                                                                                                   \
   "\n"
 
@@ -37,6 +38,8 @@ private:
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
   void (*commandFunc)(const char *str);
+  void (*servo)(int idx, int pos);
+  void (*io)(int pin, int level);
 
 
 public:
@@ -51,6 +54,8 @@ public:
 
     message = NULL;
     commandFunc = NULL;
+    servo = NULL;
+    io = NULL;
   }
 
   void setup(
@@ -73,10 +78,14 @@ public:
              const char *(*apiDevicePassFunc)(),
              void (*cmdFunc)(const char*),
              Buffer *(*getLogBufferFunc)(),
-             float (*vcc)()
+             float (*vcc)(),
+             void (*servoFunc)(int, int),
+             void (*ioFunc)(int, int)
   ) {
     message = messageFunc;
     commandFunc = cmdFunc;
+    servo = servoFunc;
+    io = ioFunc;
     bsettings->setup(commandFunc);
     battery->setup(vcc);
 
@@ -107,7 +116,7 @@ public:
     StartupStatus c = module->startupProperties();
 
     // if running once every while, stay with properties synchronization
-      // at the beginning and before sleeping, and nothing else
+    // at the beginning and before sleeping, and nothing else
     log(CLASS_MODULEB, Debug, "Force-skip acting synchronization");
     Buffer never("never");
     module->getPropSync()->setPropValue(PropSyncFreqProp, &never);
@@ -146,6 +155,26 @@ public:
         }
         log(CLASS_MODULEB, User, "-> Lcd %s", str);
         message(atoi(x), atoi(y), atoi(color), atoi(wrap), (MsgClearMode)atoi(clear), atoi(size), str);
+        return Executed;
+      } else if (strcmp("servo", c) == 0) {
+        const char *sidx = strtok(NULL, " ");
+        const char *pos = strtok(NULL, " ");
+        if (sidx == NULL || pos == NULL) {
+          logRaw(CLASS_MODULEB, Warn, "Arguments needed:\n  servo <idx> <pos>");
+          return InvalidArgs;
+        }
+        log(CLASS_MODULEB, User, "-> Servo %s %s", sidx, pos);
+        servo(atoi(sidx), atoi(pos));
+        return Executed;
+      } else if (strcmp("io", c) == 0) {
+        const char *pin = strtok(NULL, " ");
+        const char *out = strtok(NULL, " ");
+        if (pin == NULL || out == NULL) {
+          logRaw(CLASS_MODULEB, Warn, "Arguments needed:\n  io <pin> <out>");
+          return InvalidArgs;
+        }
+        log(CLASS_MODULEB, User, "-> Io %s %s", pin, out);
+        io(atoi(pin), atoi(out));
         return Executed;
       } else if (strcmp("help", c) == 0 || strcmp("?", c) == 0) {
         logRaw(CLASS_MODULEB, User, HELP_COMMAND_CLI_PROJECT);

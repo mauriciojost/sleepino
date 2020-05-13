@@ -21,5 +21,9 @@ void askStringQuestion(const char *question, Buffer *answer) {
   answer->replace('\r', '\0');
 }
 
+void io(int pin, int val) {
+  digitalWrite(pin, val);
+}
+
 #endif // PLATFORM_ESP_INC
 

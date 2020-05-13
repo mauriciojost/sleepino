@@ -106,6 +106,21 @@ int lcdContrast();
 // Callbacks
 ///////////////////
 
+void servo(int idx, int pos) {
+  switch (idx) {
+    case 0: 
+      servo0.attach(SERVO0_PIN);
+      for (int i = 0; i < 10; i++) {
+        servo0.write(pos);
+        delay(50);
+      }
+      servo0.detach();
+      break;
+    default:
+      break;
+  }
+}
+
 float vcc() {
   return VCC_FLOAT;
 }

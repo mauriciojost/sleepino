@@ -42,7 +42,9 @@ void setup() {
            apiDevicePass,
            commandFunc,
            getLogBuffer,
-           vcc
+           vcc,
+           servo,
+           io
   );
 
   log(CLASS_MAIN, Info, "Startup properties...");

@@ -96,6 +96,8 @@ int lcdContrast();
 // Callbacks
 ///////////////////
 
+void servo(int idx, int pos) { }
+
 float vcc() {
   return 3.3; // not supported.
 }
