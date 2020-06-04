@@ -17,6 +17,7 @@ FLAGS="-U ARDUINO $PARAM_FLAGS"
 
 SRC="
 src/Main.cpp
+src/x86/Stream.cpp
 src/Time.cpp
 src/Base64.cpp
 src/DateStrings.cpp
@@ -30,6 +31,7 @@ HEADERS="
 -I src/actors/
 -I src/log4ino
 -I src/main4ino
+-I src/primitives
 "
 
 LIBS=""
