@@ -147,8 +147,6 @@ Buffer *initializeTuningVariable(Buffer **var, const char *filename, int maxLeng
   return *var;
 }
 
-void nop() {}
-
 Buffer *getLogBuffer() {
   return logBuffer;
 }
