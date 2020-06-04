@@ -432,7 +432,7 @@ void debugHandle() {
     return;
   }
   static bool firstTime = true;
-  Serial.setDebugOutput(getLogLevel() == Debug && m->getModuleSettings()->getDebug()); // deep HW logs
+  Serial.setDebugOutput(m->getModuleSettings()->getDebug()); // deep HW logs
   if (firstTime) {
     log(CLASS_PLATFORM, Debug, "Initialize debuggers...");
 #ifdef TELNET_ENABLED

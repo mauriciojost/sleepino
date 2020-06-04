@@ -150,3 +150,5 @@
 /.serial.log
 /.pio
 /.vscode
+/src/pinouts
+/src/x86

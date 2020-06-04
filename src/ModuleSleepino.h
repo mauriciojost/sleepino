@@ -57,7 +57,7 @@ public:
              void (*messageFunc)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str),
              bool (*initWifiFunc)(),
              void (*stopWifiFunc)(),
-             int (*httpMethodFunc)(HttpMethod m, const char *url, const char *body, ParamStream *response, Table *headers, const char *fingerp),
+             HttpResponse (*httpMethodFunc)(HttpMethod m, const char *url, Stream *body, Table *headers, const char *fingerprint),
              void (*clearDeviceFunc)(),
              bool (*fileReadFunc)(const char *fname, Buffer *content),
              bool (*fileWriteFunc)(const char *fname, const char *content),
@@ -111,7 +111,7 @@ public:
     log(CLASS_MODULEB, Debug, "Force-skip acting synchronization");
     Buffer never("never");
     module->getPropSync()->setPropValue(PropSyncFreqProp, &never);
-    module->getPropSync()->setPropValue(PropForceSyncFreqProp, &never);
+    module->getPropSync()->setPropValue(PropSyncForceSyncFreqProp, &never);
 
     return c;
 
