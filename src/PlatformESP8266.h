@@ -356,7 +356,7 @@ void runModeArchitecture() {
   debugHandle();
 
   log(CLASS_PLATFORM, Debug, "Servo!!!");
-  digitalWrite(POWER_PIN, LOW);
+  digitalWrite(POWER_PIN, HIGH);
   log(CLASS_PLATFORM, Debug, "PD");
   servo0.attach(SERVO0_PIN);
   log(CLASS_PLATFORM, Debug, "SA");
@@ -366,7 +366,7 @@ void runModeArchitecture() {
   }
   servo0.detach();
   log(CLASS_PLATFORM, Debug, "SD");
-  digitalWrite(POWER_PIN, HIGH);
+  digitalWrite(POWER_PIN, LOW);
   log(CLASS_PLATFORM, Debug, "PU");
 }
 
