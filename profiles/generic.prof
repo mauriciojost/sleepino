@@ -17,7 +17,7 @@
 -D HTTP_TIMEOUT_MS=2000
 
 # keep log level to 1 to avoid seeing boot debug messages on startup, before fs properties are loaded
--D LOG_LEVEL=1
+-D DEFAULT_LOG_LEVEL=Warn
 -D YES_DEBUG
 -D LCD_ENABLED
 # As per experience, this is a good empirical value
