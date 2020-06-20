@@ -234,14 +234,12 @@ void clearDevice() {
 
 
 void infoArchitecture() {
-
-  log(CLASS_PLATFORM, User, "ID:%s\nV:%s\nCrashes:%d\nIP: %s\nnUptime:%luh\nVcc: %0.2f",
-                            apiDeviceLogin(),
-                            STRINGIFY(PROJ_VERSION),
-                            espSaveCrash.count(),
-                            WiFi.localIP().toString().c_str(),
-                            (millis() / 1000) / 3600,
-                            VCC_FLOAT);
+  log(CLASS_PLATFORM, User, "ID:%s", apiDeviceLogin());
+  log(CLASS_PLATFORM, User, "V:%s", STRINGIFY(PROJ_VERSION));
+  log(CLASS_PLATFORM, User, "Crashes:%d", espSaveCrash.count());
+  log(CLASS_PLATFORM, User, "IP: %s", WiFi.localIP().toString().c_str());
+  log(CLASS_PLATFORM, User, "Uptime:%luh", (millis() / 1000) / 3600);
+  log(CLASS_PLATFORM, User, "Vcc: %0.2f", VCC_FLOAT);
 }
 
 void testArchitecture() {}

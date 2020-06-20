@@ -208,7 +208,12 @@ void clearDevice() {
 
 }
 
-void infoArchitecture() {}
+void infoArchitecture() {
+  log(CLASS_PLATFORM, User, "ID:%s", apiDeviceLogin());
+  log(CLASS_PLATFORM, User, "V:%s", STRINGIFY(PROJ_VERSION));
+  log(CLASS_PLATFORM, User, "IP: %s", WiFi.localIP().toString().c_str());
+  log(CLASS_PLATFORM, User, "Uptime:%luh", (millis() / 1000) / 3600);
+}
 
 void testArchitecture() {}
 
