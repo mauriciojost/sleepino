@@ -16,6 +16,11 @@
 // Standard arduino setup
 
 
+HttpResponse httpMethodCustom(HttpMethod m, const char *url, Stream *body, Table *headers, const char *fingerprint) {
+  heartbeat();
+  return httpMethod(m, url, body, headers, fingerprint);
+}
+
 void setup() {
   setupArchitecture();
 
@@ -26,7 +31,7 @@ void setup() {
   m->setup(messageFunc,
            initWifiSimple,
            stopWifi,
-           httpMethod,
+           httpMethodCustom,
            clearDevice,
            readFile,
            writeFile,
