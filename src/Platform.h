@@ -30,6 +30,9 @@
 #ifndef QUESTION_ANSWER_MAX_LENGTH
 #define QUESTION_ANSWER_MAX_LENGTH 128
 #endif // QUESTION_ANSWER_MAX_LENGTH
+#ifndef WIFI_SKIP_IF_CONNECTED
+#define WIFI_SKIP_IF_CONNECTED true
+#endif // WIFI_SKIP_IF_CONNECTED
 Buffer *logBuffer = NULL;
 ModuleSleepino *m = NULL;
 
@@ -169,7 +172,7 @@ Buffer *getLogBuffer() {
 bool initWifiSimple() {
   Settings *s = m->getModuleSettings();
   log(CLASS_PLATFORM, Info, "W.steady");
-  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), true, WIFI_CONNECTION_RETRIES);
+  bool connected = initializeWifi(s->getSsid(), s->getPass(), s->getSsidBackup(), s->getPassBackup(), WIFI_SKIP_IF_CONNECTED, WIFI_CONNECTION_RETRIES);
   return connected;
 }
 
