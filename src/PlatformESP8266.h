@@ -168,8 +168,8 @@ void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
   // lcd print
   if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
-    int line = currentLogLine + 2;
 #ifdef LCD_ENABLED
+    int line = currentLogLine + 2;
     lcd->setTextWrap(false);
     lcd->fillRect(0, line * LCD_CHAR_HEIGHT, 84, LCD_CHAR_HEIGHT, WHITE);
     lcd->setTextSize(1);
