@@ -26,33 +26,13 @@
 #define MAX_SLEEP_CYCLE_SECS 2419200 // 4 weeks
 
 #define FORMAT_SPIFFS_IF_FAILED true
-#define DELAY_MS_SPI 1
-#define HW_STARTUP_DELAY_MSECS 10
 
-#define DEVICE_ALIAS_FILENAME "/alias.tuning"
-#define DEVICE_ALIAS_MAX_LENGTH 16
-
-#define DEVICE_PWD_FILENAME "/pass.tuning"
-#define DEVICE_PWD_MAX_LENGTH 16
-
-#define DEVICE_CONTRAST_FILENAME "/contrast.tuning"
-#define DEVICE_CONTRAST_MAX_LENGTH 3
-
-#define SLEEP_PERIOD_UPON_BOOT_SEC 2
-#define SLEEP_PERIOD_UPON_ABORT_SEC 600
-
-#define SLEEP_PERIOD_PRE_ABORT_SEC 5
-
-#define ABORT_LOG_FILENAME "/abort.log"
-#define ABORT_LOG_MAX_LENGTH 64
 
 #define LCD_CHAR_WIDTH 6
 #define LCD_CHAR_HEIGHT 8
 #define LCD_DEFAULT_BIAS 0x17
 
 #define NEXT_LOG_LINE_ALGORITHM ((currentLogLine + 1) % 6)
-
-#define LOG_BUFFER_MAX_LENGTH 1024
 
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
   "\n  ESP32 HELP"                                                                                                                         \
@@ -65,16 +45,8 @@
   "\n  lightsleep ...    : light sleep N provided seconds"                                                                                 \
   "\n"
 
-#ifdef TELNET_ENABLED
-RemoteDebug telnet;
-#endif // TELNET_ENABLED
 Adafruit_PCD8544* lcd = NULL;
-Buffer *apiDeviceId = NULL;
-Buffer *apiDevicePwd = NULL;
-Buffer *contrast = NULL;
-int currentLogLine = 0;
-Buffer *cmdBuffer = NULL;
-Buffer *cmdLast = NULL;
+
 
 
 
@@ -83,9 +55,7 @@ void reactCommandCustom();
 void heartbeat();
 bool lightSleepInterruptable(time_t cycleBegin, time_t periodSecs);
 void deepSleepNotInterruptableSecs(time_t cycleBegin, time_t periodSecs);
-void debugHandle();
 bool haveToInterrupt();
-void handleInterrupt();
 void dumpLogBuffer();
 int lcdContrast();
 
@@ -100,20 +70,6 @@ void servo(int idx, int pos) { }
 
 float vcc() {
   return 3.3; // not supported.
-}
-
-const char *apiDeviceLogin() {
-  return initializeTuningVariable(&apiDeviceId, DEVICE_ALIAS_FILENAME, DEVICE_ALIAS_MAX_LENGTH, NULL, false)->getBuffer();
-}
-
-const char *apiDevicePass() {
-  return initializeTuningVariable(&apiDevicePwd, DEVICE_PWD_FILENAME, DEVICE_PWD_MAX_LENGTH, NULL, true)->getBuffer();
-}
-
-void initLogBuffer() {
-  if (logBuffer == NULL) {
-    logBuffer = new Buffer(LOG_BUFFER_MAX_LENGTH);
-  }
 }
 
 void logLine(const char *str, const char *clz, LogLevel l, bool newline) {
@@ -170,34 +126,6 @@ Serial.print("|");
     aux2[s - 2] = '\n';
     logBuffer->append(aux2);
   }
-}
-
-void messageFunc(int x, int y, int color, bool wrap, MsgClearMode clearMode, int size, const char *str) {
-  switch (clearMode) {
-    case FullClear:
-#ifdef LCD_ENABLED
-      lcd->clearDisplay();
-#endif // LCD_ENABLED
-      break;
-    case LineClear:
-#ifdef LCD_ENABLED
-      lcd->fillRect(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT, 128, size * LCD_CHAR_HEIGHT, !color);
-#endif // LCD_ENABLED
-      wrap = false;
-      break;
-    case NoClear:
-      break;
-  }
-#ifdef LCD_ENABLED
-  lcd->setTextWrap(wrap);
-  lcd->setTextSize(size);
-  lcd->setTextColor(color);
-  lcd->setCursor(x * size * LCD_CHAR_WIDTH, y * size * LCD_CHAR_HEIGHT);
-  lcd->print(str);
-  lcd->display();
-#endif // LCD_ENABLED
-  log(CLASS_PLATFORM, Debug, "Msg(%d,%d):%s", x, y, str);
-  delay(DELAY_MS_SPI);
 }
 
 void clearDevice() {
@@ -348,28 +276,6 @@ CmdExecStatus commandArchitecture(const char *c) {
   }
 }
 
-void configureModeArchitecture() {
-  handleInterrupt();
-  debugHandle();
-}
-
-void abort(const char *msg) {
-  log(CLASS_PLATFORM, Error, "Abort: %s", msg);
-  
-  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
-  fcontent.fill("time=%ld msg=%s", now(), msg);
-  writeFile(ABORT_LOG_FILENAME, fcontent.getBuffer());
-
-  log(CLASS_PLATFORM, Warn, "Will deep sleep upon abort...");
-  bool inte = sleepInterruptable(now(), SLEEP_PERIOD_PRE_ABORT_SEC);
-  if (!inte) {
-    deepSleepNotInterruptableSecs(now(), SLEEP_PERIOD_UPON_ABORT_SEC);
-  } else {
-    m->getBot()->setMode(ConfigureMode);
-    log(CLASS_PLATFORM, Warn, "Abort skipped");
-  }
-}
-
 int readRemainingSecs() {
   return -1; // not supported nor needed
 }
@@ -413,78 +319,6 @@ void debugHandle() {
 #ifdef OTA_ENABLED
   ArduinoOTA.handle(); // Handle on the air firmware load
 #endif // OTA_ENABLED
-}
-
-void reactCommandCustom() { // for the use via telnet
-#ifdef TELNET_ENABLED
-  m->command(telnet.getLastCommand().c_str());
-#endif // TELNET_ENABLED
-}
-
-void heartbeat() { }
-
-void handleInterrupt() {
-  if (Serial.available()) {
-    // Handle serial commands
-    uint8_t c;
-
-    while (true) {
-      int inLoop = 0;
-      size_t n = Serial.readBytes(&c, 1);
-
-      if (c == 0x08 && n == 1) { // backspace
-        log(CLASS_PLATFORM, Debug, "Backspace");
-        if (cmdBuffer->getLength() > 0) {
-          cmdBuffer->getUnsafeBuffer()[cmdBuffer->getLength() - 1] = 0;
-        }
-      } else if (c == 0x1b && n == 1) { // up/down
-        log(CLASS_PLATFORM, Debug, "Up/down");
-        cmdBuffer->load(cmdLast->getBuffer());
-      } else if (c == '\n' && n == 1) { // if enter is pressed...
-        log(CLASS_PLATFORM, Debug, "Enter");
-        cmdBuffer->replace('\n', 0);
-        cmdBuffer->replace('\r', 0);
-        if (cmdBuffer->getLength() > 0) {
-          CmdExecStatus execStatus = m->command(cmdBuffer->getBuffer());
-          bool interrupt = (execStatus == ExecutedInterrupt);
-          log(CLASS_PLATFORM, Debug, "Interrupt: %d", interrupt);
-          log(CLASS_PLATFORM, Debug, "Cmd status: %s", CMD_EXEC_STATUS(execStatus));
-          log(CLASS_PLATFORM, User, "('%s' => %s)", cmdBuffer->getBuffer(), CMD_EXEC_STATUS(execStatus));
-          cmdLast->load(cmdBuffer->getBuffer());
-          cmdBuffer->clear();
-        }
-        break;
-      } else if (n == 1) {
-        cmdBuffer->append(c);
-      }
-      // echo
-      log(CLASS_PLATFORM, User, "> %s (%d)", cmdBuffer->getBuffer(), (int)c);
-      while (!Serial.available() && inLoop < USER_INTERACTION_LOOPS_MAX) {
-        inLoop++;
-        delay(100);
-      }
-      if (inLoop >= USER_INTERACTION_LOOPS_MAX) {
-        log(CLASS_PLATFORM, User, "> (timeout)");
-        break;
-      }
-    }
-    log(CLASS_PLATFORM, Debug, "Done with interrupt");
-
-  }
-}
-
-bool haveToInterrupt() {
-  if (Serial.available()) {
-    log(CLASS_PLATFORM, Debug, "Serial pinged: int");
-    return true;
-  } else {
-    return false;
-  }
-}
-
-
-int lcdContrast() {
-  return atoi(initializeTuningVariable(&contrast, DEVICE_CONTRAST_FILENAME, DEVICE_CONTRAST_MAX_LENGTH, "50", false)->getBuffer());
 }
 
 
