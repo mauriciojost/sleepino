@@ -16,7 +16,6 @@
 #endif // TELNET_ENABLED
 #include <Servo.h>
 #include <primitives/BoardESP8266.h>
-#include <PlatformESP.h>
 
 #ifndef TELNET_HANDLE_DELAY_MS
 #define TELNET_HANDLE_DELAY_MS 240000 // 4 minutes
@@ -54,6 +53,9 @@ extern "C" {
   "\n"
 
 Adafruit_PCD8544* lcd = NULL;
+
+#include <PlatformESP.h>
+
 Servo servo0;
 
 EspSaveCrash espSaveCrash;

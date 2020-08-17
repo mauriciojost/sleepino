@@ -17,7 +17,6 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <primitives/BoardESP32.h>
-#include <PlatformESP.h>
 
 #ifndef TELNET_HANDLE_DELAY_MS
 #define TELNET_HANDLE_DELAY_MS 240000 // 4 minutes
@@ -47,6 +46,7 @@
 
 Adafruit_PCD8544* lcd = NULL;
 
+#include <PlatformESP.h>
 
 
 
