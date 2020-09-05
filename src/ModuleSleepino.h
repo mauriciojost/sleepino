@@ -8,6 +8,7 @@
 
 #include <actors/SleepinoSettings.h>
 #include <actors/Battery.h>
+#include <actors/Servon.h>
 #include <mod4ino/Module.h>
 
 #define CLASS_MODULEB "MB"
@@ -35,12 +36,31 @@ private:
   // Actors
   SleepinoSettings *bsettings;
   Battery *battery;
+  Servon *servon;
 
   void (*message)(int x, int y, int color, bool wrap, MsgClearMode clear, int size, const char *str);
   void (*commandFunc)(const char *str);
   void (*servo)(int idx, int pos);
   void (*io)(int pin, int level);
 
+  std::function<void (int)> rotate = [&](int d) { 
+    if (servo != NULL) {
+      log(CLASS_SERVON, Debug, "Moving...");
+      servo(0, d);
+    }
+  };
+
+  std::function<void (bool)> enable = [&](bool e) { 
+    if (io != NULL) {
+      if (e) {
+        log(CLASS_SERVON, Debug, "Enabled.");
+        io(POWER_PIN, HIGH);
+      } else {
+        log(CLASS_SERVON, Debug, "Disabled.");
+        io(POWER_PIN, LOW);
+      }
+    }
+  };
 
 public:
   ModuleSleepino() {
@@ -49,8 +69,9 @@ public:
 
     bsettings = new SleepinoSettings("sleepino");
     battery = new Battery("battery");
+    servon = new Servon("servon");
 
-    module->getActors()->add(2, (Actor *)bsettings, (Actor *)battery);
+    module->getActors()->add(3, (Actor *)bsettings, (Actor *)battery, (Actor *)servon);
 
     message = NULL;
     commandFunc = NULL;
@@ -109,6 +130,8 @@ public:
                   apiDevicePassFunc,
                   alwaysTrue,
                   getLogBufferFunc);
+
+    servon->setup(rotate, enable);
 
   }
 

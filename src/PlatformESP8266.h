@@ -86,7 +86,7 @@ void servo(int idx, int pos) {
       servo0.attach(SERVO0_PIN);
       for (int i = 0; i < 10; i++) {
         servo0.write(pos);
-        delay(50);
+        delay(80);
       }
       servo0.detach();
       break;
@@ -285,19 +285,6 @@ void runModeArchitecture() {
   handleInterrupt();
   debugHandle();
 
-  log(CLASS_PLATFORM, Debug, "Servo!!!");
-  digitalWrite(POWER_PIN, HIGH);
-  log(CLASS_PLATFORM, Debug, "PD");
-  servo0.attach(SERVO0_PIN);
-  log(CLASS_PLATFORM, Debug, "SA");
-  for (int i = 0; i <= 180; i++) {
-    servo0.write(i);
-    delay(60);
-  }
-  servo0.detach();
-  log(CLASS_PLATFORM, Debug, "SD");
-  digitalWrite(POWER_PIN, LOW);
-  log(CLASS_PLATFORM, Debug, "PU");
 }
 
 CmdExecStatus commandArchitecture(const char *c) {
