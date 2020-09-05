@@ -2,6 +2,7 @@
 
 set -x 
 set -e
+set -u
 
 rm -f .simulator.bin
 

@@ -39,4 +39,11 @@
 
 #define GPIO39_PIN 39 // ADC3
 
+// LCD
+#define LCD_CLK_PIN GPIO14_PIN
+#define LCD_DIN_PIN GPIO13_PIN
+#define LCD_DC_PIN GPIO27_PIN
+#define LCD_CS_PIN GPIO15_PIN
+#define LCD_RST_PIN GPIO26_PIN
+
 #endif // ESP32
