@@ -11,7 +11,7 @@
 #include <actors/Servon.h>
 #include <mod4ino/Module.h>
 
-#define CLASS_MODULEB "MB"
+#define CLASS_MODULEB "MO"
 
 #define COMMAND_MAX_LENGTH 128
 

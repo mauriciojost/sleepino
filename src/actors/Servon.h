@@ -5,7 +5,7 @@
 #include <main4ino/Actor.h>
 #include <functional>
 
-#define CLASS_SERVON "SV"
+#define CLASS_SERVON "SE"
 
 enum ServonProps {
   ServonPropsDelimiter = 0

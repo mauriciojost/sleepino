@@ -5,7 +5,7 @@
 #include <main4ino/Actor.h>
 
 #define STATUS_BUFFER_SIZE 64
-#define CLASS_SLEEPINO_SETTINGS "SS"
+#define CLASS_SLEEPINO_SETTINGS "SL"
 #define DEFAULT_FS_LOGS_LENGTH 32
 #define DEFAULT_LS_DURATION_SECS 60
 

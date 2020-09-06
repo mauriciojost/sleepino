@@ -4,7 +4,7 @@
 #include <log4ino/Log.h>
 #include <main4ino/Actor.h>
 
-#define CLASS_BATTERY "BY"
+#define CLASS_BATTERY "BA"
 
 #define VCC_MVOLTS_MIN_DEFAULT 100000
 #define VCC_MVOLTS_MAX_DEFAULT 0
