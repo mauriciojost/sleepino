@@ -8,7 +8,8 @@
 #define CLASS_SERVON "SE"
 
 enum ServonProps {
-  ServonPropsDelimiter = 0
+  ServonFreqProp = 0,   // frequency of synchronization
+  ServonPropsDelimiter
 };
 
 class Servon : public Actor {
@@ -46,23 +47,38 @@ public:
       log(CLASS_SERVON, Debug, "Act!");
       if (rotate != NULL) {
         enable(true);
-        log(CLASS_SERVON, Debug, "Enabled, moving...");
-        for (int i = 0; i <= 180; i = i + 30) {
+        for (int i = 0; i <= 180; i = i + 90) {
           rotate(i);
         }
         enable(false);
-        log(CLASS_SERVON, Debug, "Disabled");
       } else {
         log(CLASS_SERVON, Warn, "No init!");
       }
     }
   }
 
-  const char *getPropName(int propIndex) {
-    return "";
+public: const char *getPropName(int propIndex) {
+    switch (propIndex) {
+      case (ServonFreqProp):
+        return ADVANCED_PROP_PREFIX "freq";
+      default:
+        return "";
+    }
   }
 
-  void getSetPropValue(int propIndex, GetSetMode m, const Value *targetValue, Value *actualValue) { }
+public: void getSetPropValue(int propIndex, GetSetMode m, const Value *targetValue, Value *actualValue) {
+    switch (propIndex) {
+      case (ServonFreqProp): {
+        setPropTiming(m, targetValue, actualValue, md->getTiming());
+      } break;
+      default:
+        break;
+    }
+    if (m != GetValue) {
+      getMetadata()->changed();
+    }
+  }
+
 
   Metadata *getMetadata() {
     return md;

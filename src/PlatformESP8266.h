@@ -86,7 +86,7 @@ void servo(int idx, int pos) {
       servo0.attach(SERVO0_PIN);
       for (int i = 0; i < 10; i++) {
         servo0.write(pos);
-        delay(80);
+        delay(60);
       }
       servo0.detach();
       break;

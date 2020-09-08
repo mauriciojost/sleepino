@@ -45,7 +45,7 @@ private:
 
   std::function<void (int)> rotate = [&](int d) { 
     if (servo != NULL) {
-      log(CLASS_SERVON, Debug, "Moving...");
+      log(CLASS_SERVON, Debug, "rotate(%d)", d);
       servo(0, d);
     }
   };
