@@ -39,6 +39,11 @@ extern "C" {
 #include "user_interface.h"
 }
 
+struct { // 512 bytes can be stored
+  uint32_t crc32;
+  int remainingSecs;
+} rtcData;
+
 #define HELP_COMMAND_ARCH_CLI                                                                                                              \
   "\n  ESP8266 HELP"                                                                                                                       \
   "\n  init              : initialize essential settings (wifi connection, logins, etc.)"                                                  \
@@ -348,13 +353,15 @@ CmdExecStatus commandArchitecture(const char *c) {
   }
 }
 
-#define USER_RTC_OFFSET 64
 int readRemainingSecs() {
-  //from 256 is user mem
   int s;
-  bool res = system_rtc_mem_read(USER_RTC_OFFSET, &s, sizeof(int));
-  if (res) {
-    return s;
+  if (ESP.rtcUserMemoryRead(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
+    if (rtcData.crc32 == 0) {
+      return rtcData.remainingSecs;
+    } else {
+      log(CLASS_PLATFORM, Warn, "Invalid RTC");
+      return -1;
+    }
   } else {
     log(CLASS_PLATFORM, Debug, "No ds remaining");
     return -1;
@@ -362,8 +369,9 @@ int readRemainingSecs() {
 }
 
 void writeRemainingSecs(int s) {
-  bool res = system_rtc_mem_write(USER_RTC_OFFSET, &s, sizeof(int));
-  if (!res) {
+  rtcData.crc32 = 0;
+  rtcData.remainingSecs = s;
+  if (!ESP.rtcUserMemoryWrite(0, (uint32_t*) &rtcData, sizeof(rtcData))) {
     log(CLASS_PLATFORM, Warn, "Failed to write remaining");
   }
 }
