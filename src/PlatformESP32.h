@@ -101,8 +101,8 @@ Serial.print("|");
   // lcd print
   if (lcd != NULL && lcdLogsEnabled) { // can be called before LCD initialization
     currentLogLine = NEXT_LOG_LINE_ALGORITHM;
-    int line = currentLogLine + 2;
 #ifdef LCD_ENABLED
+    int line = currentLogLine + 2;
     lcd->setTextWrap(false);
     lcd->fillRect(0, line * LCD_CHAR_HEIGHT, 84, LCD_CHAR_HEIGHT, WHITE);
     lcd->setTextSize(1);
@@ -148,6 +148,32 @@ void testArchitecture() {}
 // Execution
 ///////////////////
 
+int failuresInPast() {
+  // Useful links for debugging:
+  // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
+  // ./packages/framework-arduinoespressif8266@2.20502.0/tools/sdk/include/user_interface.h
+  // https://bitbucket.org/mauriciojost/esp8266-stacktrace-translator/src/master/
+  Buffer fcontent(16);
+  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
+  return abrt?1:0;
+}
+
+void reportFailureLogs() {
+
+
+  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
+  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
+  if (abrt) {
+    log(CLASS_PLATFORM, Error, "Abort: %s", fcontent.getBuffer());
+  } else {
+    log(CLASS_PLATFORM, Debug, "No abort");
+  }
+}
+
+void cleanFailures() {
+  SPIFFS.remove(ABORT_LOG_FILENAME);
+}
+
 void setupArchitecture() {
 
   // Let HW startup
@@ -158,18 +184,27 @@ void setupArchitecture() {
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
 
-  log(CLASS_PLATFORM, User, "BOOT");
-  log(CLASS_PLATFORM, User, "%s", STRINGIFY(PROJ_VERSION));
-
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
 
   log(CLASS_PLATFORM, Debug, "Setup timing");
   setExternalMillis(millis);
-
+  
+  heartbeat(); 
+  
   log(CLASS_PLATFORM, Debug, "Setup SPIFFS");
   SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED);
+  
+  startup(
+    PROJECT_ID,
+    STRINGIFY(PROJ_VERSION),
+    apiDeviceLogin(),
+    failuresInPast,
+    reportFailureLogs,
+    cleanFailures,
+    restoreSafeFirmware
+  );
 
 
   log(CLASS_PLATFORM, Debug, "Setup wifi");
@@ -195,17 +230,6 @@ void setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
-  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
-  if (abrt) {
-    log(CLASS_PLATFORM, Warn, "Abort: %s", fcontent.getBuffer());
-    SPIFFS.begin();
-    SPIFFS.remove(ABORT_LOG_FILENAME);
-    SPIFFS.end();
-  } else {
-    log(CLASS_PLATFORM, Debug, "No abort");
-  }
-
 }
 
 void runModeArchitecture() {
@@ -216,6 +240,7 @@ void runModeArchitecture() {
   Buffer lcdAux(64);
 
   lcdAux.fill("%s\nV:%s", timeAux.getBuffer(), STRINGIFY(PROJ_VERSION));
+  logRaw(CLASS_PLATFORM, Debug, lcdAux.getBuffer());
 
   messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 

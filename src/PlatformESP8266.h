@@ -190,6 +190,41 @@ void wakeupCallback() {  // unlike ISRs, you can do a print() from a callback fu
   //Serial.flush();
 }
 
+int failuresInPast() {
+  // Useful links for debugging:
+  // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
+  // ./packages/framework-arduinoespressif8266@2.20502.0/tools/sdk/include/user_interface.h
+  // https://bitbucket.org/mauriciojost/esp8266-stacktrace-translator/src/master/
+  int e = espSaveCrash.count();
+  Buffer fcontent(16);
+  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
+  return e + (abrt?1:0);
+}
+
+void reportFailureLogs() {
+  bool fsLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->fsLogsEnabled());
+  if (fsLogsEnabled) {
+    initLogBuffer();
+    espSaveCrash.print(logBuffer->getUnsafeBuffer(), LOG_BUFFER_MAX_LENGTH);
+    writeFile(STACKTRACE_LOG_FILENAME, logBuffer->getBuffer());
+  }
+
+  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
+  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
+  if (abrt) {
+    log(CLASS_PLATFORM, Error, "Abort: %s", fcontent.getBuffer());
+  } else {
+    log(CLASS_PLATFORM, Debug, "No abort");
+  }
+}
+
+void cleanFailures() {
+  SPIFFS.begin();
+  SPIFFS.remove(ABORT_LOG_FILENAME);
+  SPIFFS.end();
+  espSaveCrash.clear();
+}
+
 void setupArchitecture() {
 
   // Let HW startup
@@ -200,9 +235,6 @@ void setupArchitecture() {
   Serial.setTimeout(1000); // Timeout for read
   setupLog(logLine);
 
-  log(CLASS_PLATFORM, User, "BOOT");
-  log(CLASS_PLATFORM, User, "%s", STRINGIFY(PROJ_VERSION));
-
   log(CLASS_PLATFORM, Debug, "Setup cmds");
   cmdBuffer = new Buffer(COMMAND_MAX_LENGTH);
   cmdLast = new Buffer(COMMAND_MAX_LENGTH);
@@ -212,25 +244,15 @@ void setupArchitecture() {
 
   heartbeat();
 
-
-  if (espSaveCrash.count() > 0) {
-    // Useful links for debugging:
-    // https://links2004.github.io/Arduino/dc/deb/md_esp8266_doc_exception_causes.html
-    // ./packages/framework-arduinoespressif8266@2.20502.0/tools/sdk/include/user_interface.h
-    // https://bitbucket.org/mauriciojost/esp8266-stacktrace-translator/src/master/
-    log(CLASS_PLATFORM, Error, "Crshs:%d", (int)espSaveCrash.count());
-    bool fsLogsEnabled = (m==NULL?true:m->getSleepinoSettings()->fsLogsEnabled());
-    if (fsLogsEnabled) {
-      initLogBuffer();
-      espSaveCrash.print(logBuffer->getUnsafeBuffer(), LOG_BUFFER_MAX_LENGTH);
-      writeFile(STACKTRACE_LOG_FILENAME, logBuffer->getBuffer());
-      espSaveCrash.clear();
-    }
-    restoreSafeFirmware();
-  } else {
-    log(CLASS_PLATFORM, Debug, "No crashes");
-  }
-
+  startup(
+    PROJECT_ID,
+    STRINGIFY(PROJ_VERSION),
+    apiDeviceLogin(),
+    failuresInPast,
+    reportFailureLogs,
+    cleanFailures,
+    restoreSafeFirmware
+  );
 
   log(CLASS_PLATFORM, Debug, "Setup pins");
   pinMode(POWER_PIN, OUTPUT);
@@ -262,17 +284,6 @@ void setupArchitecture() {
 #endif // TELNET_ENABLED
   heartbeat();
 
-  Buffer fcontent(ABORT_LOG_MAX_LENGTH);
-  bool abrt = readFile(ABORT_LOG_FILENAME, &fcontent);
-  if (abrt) {
-    log(CLASS_PLATFORM, Warn, "Abort: %s", fcontent.getBuffer());
-    SPIFFS.begin();
-    SPIFFS.remove(ABORT_LOG_FILENAME);
-    SPIFFS.end();
-  } else {
-    log(CLASS_PLATFORM, Debug, "No abort");
-  }
-
 }
 
 void runModeArchitecture() {
@@ -287,6 +298,7 @@ void runModeArchitecture() {
 
   messageFunc(0, 0, 1, false, FullClear, 1, lcdAux.getBuffer());
 
+  // other
   handleInterrupt();
   debugHandle();
 
