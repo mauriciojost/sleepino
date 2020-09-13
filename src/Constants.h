@@ -1,8 +1,7 @@
 #ifndef CONSTANTS_INC
 #define CONSTANTS_INC
 
-#define PROJECT_ID "sleepino"
-
+#define PROJECT_ID "waterino"
 
 #ifdef ARDUINO
 #ifdef ESP8266 // on ESP8266
