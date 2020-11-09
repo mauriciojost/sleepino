@@ -25,6 +25,7 @@ function export_firmware_for_platform() {
   echo "Exporting files for $platform..."
 
   find . -name 'firmware-*.'$platform'.bin' > files.list
+  find . -name 'firmware-*.'$platform'.bin.elf' >> files.list
 
   for f in `cat files.list`
   do
